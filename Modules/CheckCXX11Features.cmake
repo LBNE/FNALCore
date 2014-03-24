@@ -78,9 +78,9 @@
 # each other (i.e. only one may be present).
 #
 
-if (NOT CMAKE_CXX_COMPILER_LOADED)
-    message(FATAL_ERROR "CheckCXX11Features modules only works if language CXX is enabled")
-endif ()
+if(NOT CMAKE_CXX_COMPILER_LOADED)
+  message(FATAL_ERROR "CheckCXX11Features modules only works if language CXX is enabled")
+endif()
 
 cmake_minimum_required(VERSION 2.8.3)
 
@@ -89,74 +89,83 @@ cmake_minimum_required(VERSION 2.8.3)
 #
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-std=c++11" _HAS_CXX11_FLAG)
-if (NOT _HAS_CXX11_FLAG)
-    check_cxx_compiler_flag("-std=c++0x" _HAS_CXX0X_FLAG)
-endif ()
+if(NOT _HAS_CXX11_FLAG)
+  check_cxx_compiler_flag("-std=c++0x" _HAS_CXX0X_FLAG)
+endif()
 
-if (_HAS_CXX11_FLAG)
-    set(CXX11_COMPILER_FLAGS "-std=c++11")
-elseif (_HAS_CXX0X_FLAG)
-    set(CXX11_COMPILER_FLAGS "-std=c++0x")
-endif ()
+if(_HAS_CXX11_FLAG)
+  set(CXX11_COMPILER_FLAGS "-std=c++11")
+elseif(_HAS_CXX0X_FLAG)
+  set(CXX11_COMPILER_FLAGS "-std=c++0x")
+endif()
 
+#-----------------------------------------------------------------------
+# function cxx11_check_feature(<name> <result>)
+#
 function(cxx11_check_feature FEATURE_NAME RESULT_VAR)
-    if (NOT DEFINED ${RESULT_VAR})
-      set(_bindir "${CMAKE_CURRENT_BINARY_DIR}/CheckCXX11Features/cxx11_${FEATURE_NAME}")
+  if(NOT DEFINED ${RESULT_VAR})
+    set(_bindir "${CMAKE_CURRENT_BINARY_DIR}/CheckCXX11Features/cxx11_${FEATURE_NAME}")
 
-        set(_SRCFILE_BASE ${CMAKE_CURRENT_LIST_DIR}/CheckCXX11Features/cxx11-test-${FEATURE_NAME})
-        set(_LOG_NAME "\"${FEATURE_NAME}\"")
-        message(STATUS "Checking C++11 support for ${_LOG_NAME}")
+    set(_SRCFILE_BASE ${CMAKE_CURRENT_LIST_DIR}/CheckCXX11Features/cxx11-test-${FEATURE_NAME})
+    set(_LOG_NAME "\"${FEATURE_NAME}\"")
+    message(STATUS "Checking C++11 support for ${_LOG_NAME}")
 
-        set(_SRCFILE "${_SRCFILE_BASE}.cpp")
-        set(_SRCFILE_FAIL "${_SRCFILE_BASE}_fail.cpp")
-        set(_SRCFILE_FAIL_COMPILE "${_SRCFILE_BASE}_fail_compile.cpp")
+    set(_SRCFILE "${_SRCFILE_BASE}.cpp")
+    set(_SRCFILE_FAIL "${_SRCFILE_BASE}_fail.cpp")
+    set(_SRCFILE_FAIL_COMPILE "${_SRCFILE_BASE}_fail_compile.cpp")
 
-        if (CROSS_COMPILING)
-            try_compile(${RESULT_VAR} "${_bindir}" "${_SRCFILE}"
-                        COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
-            if (${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
-                try_compile(${RESULT_VAR} "${_bindir}_fail" "${_SRCFILE_FAIL}"
-                            COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
-            endif (${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
-        else (CROSS_COMPILING)
-            try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
-                    "${_bindir}" "${_SRCFILE}"
-                    COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
-            if (_COMPILE_RESULT_VAR AND NOT _RUN_RESULT_VAR)
-                set(${RESULT_VAR} TRUE)
-            else (_COMPILE_RESULT_VAR AND NOT _RUN_RESULT_VAR)
-                set(${RESULT_VAR} FALSE)
-            endif (_COMPILE_RESULT_VAR AND NOT _RUN_RESULT_VAR)
-            if (${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
-                try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
-                        "${_bindir}_fail" "${_SRCFILE_FAIL}"
-                         COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
-                if (_COMPILE_RESULT_VAR AND _RUN_RESULT_VAR)
-                    set(${RESULT_VAR} TRUE)
-                else (_COMPILE_RESULT_VAR AND _RUN_RESULT_VAR)
-                    set(${RESULT_VAR} FALSE)
-                endif (_COMPILE_RESULT_VAR AND _RUN_RESULT_VAR)
-            endif (${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
-        endif (CROSS_COMPILING)
-        if (${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL_COMPILE})
-            try_compile(_TMP_RESULT "${_bindir}_fail_compile" "${_SRCFILE_FAIL_COMPILE}"
-                        COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
-            if (_TMP_RESULT)
-                set(${RESULT_VAR} FALSE)
-            else (_TMP_RESULT)
-                set(${RESULT_VAR} TRUE)
-            endif (_TMP_RESULT)
-        endif (${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL_COMPILE})
+    if(CROSS_COMPILING)
+      try_compile(${RESULT_VAR} "${_bindir}" "${_SRCFILE}"
+        COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
+      if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
+        try_compile(${RESULT_VAR} "${_bindir}_fail" "${_SRCFILE_FAIL}"
+          COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
+      endif()
+    else()
+      try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
+        "${_bindir}" "${_SRCFILE}"
+        COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
+      if(_COMPILE_RESULT_VAR AND NOT _RUN_RESULT_VAR)
+        set(${RESULT_VAR} TRUE)
+      else()
+        set(${RESULT_VAR} FALSE)
+      endif()
+      
+      if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
+        try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
+          "${_bindir}_fail" "${_SRCFILE_FAIL}"
+          COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
+        if(_COMPILE_RESULT_VAR AND _RUN_RESULT_VAR)
+          set(${RESULT_VAR} TRUE)
+        else()
+          set(${RESULT_VAR} FALSE)
+        endif()
+      endif()
+    endif()
 
-        if (${RESULT_VAR})
-            message(STATUS "Checking C++11 support for ${_LOG_NAME}: works")
-        else (${RESULT_VAR})
-            message(STATUS "Checking C++11 support for ${_LOG_NAME}: not supported")
-        endif (${RESULT_VAR})
-        set(${RESULT_VAR} ${${RESULT_VAR}} CACHE INTERNAL "C++11 support for ${_LOG_NAME}")
-    endif (NOT DEFINED ${RESULT_VAR})
-endfunction(cxx11_check_feature)
+    if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL_COMPILE})
+      try_compile(_TMP_RESULT "${_bindir}_fail_compile" "${_SRCFILE_FAIL_COMPILE}"
+        COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
+      if(_TMP_RESULT)
+        set(${RESULT_VAR} FALSE)
+      else()
+        set(${RESULT_VAR} TRUE)
+      endif()
+    endif()
 
+    if(${RESULT_VAR})
+      message(STATUS "Checking C++11 support for ${_LOG_NAME}: works")
+    else()
+      message(STATUS "Checking C++11 support for ${_LOG_NAME}: not supported")
+    endif()
+
+    set(${RESULT_VAR} ${${RESULT_VAR}} CACHE INTERNAL "C++11 support for ${_LOG_NAME}")
+  endif()
+endfunction()
+
+#-----------------------------------------------------------------------
+# Run all checks
+#
 cxx11_check_feature("__func__" HAS_CXX11_FUNC)
 cxx11_check_feature("algorithm_all_of" HAS_CXX11_ALGORITHM_ALL_OF)
 cxx11_check_feature("algorithm_any_of" HAS_CXX11_ALGORITHM_ANY_OF)
@@ -205,3 +214,4 @@ cxx11_check_feature("tuple" HAS_CXX11_TUPLE)
 cxx11_check_feature("type_traits" HAS_CXX11_TYPE_TRAITS)
 cxx11_check_feature("utility_declval" HAS_CXX11_UTILITY_DECLVAL)
 cxx11_check_feature("variadic_templates" HAS_CXX11_VARIADIC_TEMPLATES)
+
