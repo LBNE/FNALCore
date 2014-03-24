@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(CheckCXX11Support)
 
 # - Add CXX11 Modules
-list(INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/CMake/cmake-cxx11/Modules)
+list(INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/Modules)
 
 # - Check Features
 include(CheckCXX11Features)
@@ -31,7 +31,7 @@ try_run(
   STDLIB_RUN_RESULT
   STDLIB_COMPILE_RESULT
   ${PROJECT_BINARY_DIR}/CheckCXXStandardLibrary
-  ${PROJECT_SOURCE_DIR}/CMake/CheckCXXStandardLibrary/cxx11-test-stdlib.cpp
+  ${PROJECT_SOURCE_DIR}/Modules/CheckCXXStandardLibrary/cxx11-test-stdlib.cpp
   RUN_OUTPUT_VARIABLE STDLIB_OUTPUT
   )
 message(STATUS "C++ Standard Library : ${STDLIB_OUTPUT}")
