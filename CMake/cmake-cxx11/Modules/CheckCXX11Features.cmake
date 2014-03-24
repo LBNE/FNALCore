@@ -59,7 +59,7 @@
 # Copyright 2014 Ben Morgan <bmorgan.warwick@gmail.com>
 #
 # Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file Copyright.txt for details.
+# see accompanying file LICENSE.txt for details.
 #
 # This software is distributed WITHOUT ANY WARRANTY; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
