@@ -1,4 +1,4 @@
-CheckCXX11Support
+CheckCXX11Features
 =================
 Test ability of CMake to detect support for C++11 features by the compiler
 and/or standard library.
@@ -12,6 +12,9 @@ which is also [viewable online](http://quickgit.kde.org/?p=scratch%2Fdakon%2Fcma
 Additional tests have been added to determine support for further aspects
 of the standard. These are still a work in progress, so may not work
 perfectly on every combination of compiler and standard library.
+
+A preliminary check of the standard library being linked is also provided,
+though this is still a work in progress.
 
 How to Use
 ==========
