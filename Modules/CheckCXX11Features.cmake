@@ -1,6 +1,14 @@
 # - Check which parts of the C++11 standard the compiler supports
 #
-# When found it will set the following variables
+# When included in a project via include(), checks are run on the current
+# C++ compiler to:
+#
+#  - Determine the flags needed to enable C++11 support
+#  - Determine availability of C++11 features via Compile/Run/Fail tests
+#
+# If the project is being cross-compiled, only compile tests are performed.
+# After the checks are performed, the following variables are set in the
+# CMake cache:
 #
 #  CXX11_COMPILER_FLAGS         - the compiler flags needed to get C++11 features
 #
@@ -130,7 +138,7 @@ function(cxx11_check_feature FEATURE_NAME RESULT_VAR)
       else()
         set(${RESULT_VAR} FALSE)
       endif()
-      
+
       if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
         try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
           "${_bindir}_fail" "${_SRCFILE_FAIL}"
