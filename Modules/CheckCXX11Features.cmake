@@ -122,7 +122,7 @@ function(cxx11_check_feature FEATURE_NAME RESULT_VAR)
     set(_SRCFILE_FAIL "${_SRCFILE_BASE}_fail.cpp")
     set(_SRCFILE_FAIL_COMPILE "${_SRCFILE_BASE}_fail_compile.cpp")
 
-    if(CROSS_COMPILING)
+    if(CMAKE_CROSSCOMPILING)
       try_compile(${RESULT_VAR} "${_bindir}" "${_SRCFILE}"
         COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
       if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
