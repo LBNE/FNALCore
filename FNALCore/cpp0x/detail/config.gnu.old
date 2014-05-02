@@ -1,0 +1,266 @@
+#ifndef CPP0X_DETAIL_CONFIG
+#define CPP0X_DETAIL_CONFIG
+
+// ======================================================================
+//
+// cpp0x - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// Define gcc version test:
+// ----------------------------------------------------------------------
+
+#if defined __GNUC_PATCHLEVEL__
+  # define GCC_VERSION (10000 * __GNUC__ \
+                       + 1000 * __GNUC_MINOR__ \
+                       +        __GNUC_PATCHLEVEL__)
+
+#elif defined __GNUC_MINOR__
+  # define GCC_VERSION (10000 * __GNUC__ \
+                       + 1000 * __GNUC_MINOR__)
+
+#elif defined __GNUC__
+  # define GCC_VERSION (10000 * __GNUC__)
+
+#else
+  # define GCC_VERSION 0
+
+#endif
+
+# define GCC_IS_AT_LEAST(major, minor, patch) \
+  (GCC_VERSION >= ((10000*(major)) + (1000*(minor)) + (patch)))
+
+// ----------------------------------------------------------------------
+// Feature identification:
+// ----------------------------------------------------------------------
+
+// --- Initially assume _no_ C++0X core features are implemented:
+#undef CPP0X_HAS_AUTO
+#undef CPP0X_HAS_CONSTEXPR_FUNCTIONS
+#undef CPP0X_HAS_CONSTEXPR_VARIABLES
+#undef CPP0X_HAS_DECLTYPE
+#undef CPP0X_HAS_EXPLICIT_CONVERSION_OPERATORS
+#undef CPP0X_HAS_FCTN_TEMPLATE_DEFAULT_ARGS
+#undef CPP0X_HAS_LAMBDAS
+#undef CPP0X_HAS_NOEXCEPT
+#undef CPP0X_HAS_NULLPTR
+#undef CPP0X_HAS_RVALUE_REFERENCES
+#undef CPP0X_HAS_STATIC_ASSERT
+#undef CPP0X_HAS_VARIADIC_TEMPLATES
+
+// --- Initially assume _no_ C++0X library features are implemented:
+#undef CPP0X_HAS_ALGORITHM_ALL_OF
+#undef CPP0X_HAS_ALGORITHM_ANY_OF
+#undef CPP0X_HAS_ALGORITHM_COPY_N
+#undef CPP0X_HAS_ALGORITHM_FIND_IF_NOT
+#undef CPP0X_HAS_ALGORITHM_IS_PARTITIONED
+#undef CPP0X_HAS_ALGORITHM_IS_SORTED
+#undef CPP0X_HAS_ALGORITHM_MIN_MAX
+#undef CPP0X_HAS_ALGORITHM_NONE_OF
+#undef CPP0X_HAS_ALGORITHM_PARTITION_POINT
+#undef CPP0X_HAS_ALGORITHM_SHUFFLE
+#undef CPP0X_HAS_ARRAY_HDR
+#undef CPP0X_HAS_CMATH_C99
+#undef CPP0X_HAS_CMATH_CLASSIFICATION
+#undef CPP0X_HAS_CSTDDEF_NULLPTR_T
+#undef CPP0X_HAS_CSTDINT_HDR
+#undef CPP0X_HAS_FUNCTIONAL_BIND
+#undef CPP0X_HAS_FUNCTIONAL_FUNCTION
+#undef CPP0X_HAS_FUNCTIONAL_HASH
+#undef CPP0X_HAS_FUNCTIONAL_MEM_FN
+#undef CPP0X_HAS_FUNCTIONAL_REFERENCE_WRAPPER
+#undef CPP0X_HAS_ITERATOR_RANGE
+#undef CPP0X_HAS_MEMORY_SHARED_PTR
+#undef CPP0X_HAS_MEMORY_UNIQUE_PTR
+#undef CPP0X_HAS_NUMERIC_IOTA
+#undef CPP0X_HAS_RANDOM_HDR
+#undef CPP0X_HAS_REGEX_HDR
+#undef CPP0X_HAS_STRING_NUMERIC_CONVERSIONS
+#undef CPP0X_HAS_SYSTEM_ERROR_HDR
+#undef CPP0X_HAS_TUPLE_HDR
+#undef CPP0X_HAS_TYPE_TRAITS_HDR
+#undef CPP0X_HAS_UTILITY_DECLVAL
+
+
+// --- Specify, by version, which features are newly-implemented
+#if GCC_IS_AT_LEAST(4,0,0)
+  #define CPP0X_HAS_CMATH_FPCLASSIFICATION
+#endif
+
+#if defined __GXX_EXPERIMENTAL_CXX0X__
+
+  #if GCC_IS_AT_LEAST(4,1,0)
+    #define CPP0X_HAS_CSTDINT_HDR
+  #endif
+
+  #if GCC_IS_AT_LEAST(4,3,0)
+    #define CPP0X_HAS_DECLTYPE
+    #define CPP0X_HAS_FCTN_TEMPLATE_DEFAULT_ARGS
+    #define CPP0X_HAS_RVALUE_REFERENCES
+    #define CPP0X_HAS_STATIC_ASSERT
+    #define CPP0X_HAS_VARIADIC_TEMPLATES
+
+    #define CPP0X_HAS_FUNCTIONAL_HASH
+    #define CPP0X_HAS_FUNCTIONAL_MEM_FN
+    #define CPP0X_HAS_FUNCTIONAL_REFERENCE_WRAPPER
+    #define CPP0X_HAS_TUPLE_HDR
+    #define CPP0X_HAS_TYPE_TRAITS_HDR
+  #endif
+
+  #if GCC_IS_AT_LEAST(4,4,0)
+    #define CPP0X_HAS_AUTO
+    #define CPP0X_HAS_EXPLICIT_CONVERSION_OPERATORS
+
+    #define CPP0X_HAS_ALGORITHM_ALL_OF
+    #define CPP0X_HAS_ALGORITHM_COPY_N
+    #define CPP0X_HAS_ALGORITHM_ANY_OF
+    #define CPP0X_HAS_ALGORITHM_FIND_IF_NOT
+    #define CPP0X_HAS_ALGORITHM_NONE_OF
+    #define CPP0X_HAS_RANDOM_HDR
+    #define CPP0X_HAS_SYSTEM_ERROR_HDR
+    #define CPP0X_HAS_STRING_NUMERIC_CONVERSIONS
+  #endif
+
+  #if GCC_IS_AT_LEAST(4,5,0)
+    #define CPP0X_HAS_LAMBDAS
+
+    #define CPP0X_HAS_ALGORITHM_MIN_MAX
+    #define CPP0X_HAS_ALGORITHM_SHUFFLE
+    #define CPP0X_HAS_ARRAY_HDR
+    #define CPP0X_HAS_CMATH_C99
+    #define CPP0X_HAS_FUNCTIONAL_BIND
+    #define CPP0X_HAS_FUNCTIONAL_FUNCTION
+    #define CPP0X_HAS_MEMORY_SHARED_PTR
+    #define CPP0X_HAS_MEMORY_UNIQUE_PTR
+    #define CPP0X_HAS_NUMERIC_IOTA
+    #define CPP0X_HAS_UTILITY_DECLVAL
+  #endif
+
+  #if GCC_IS_AT_LEAST(4,6,0)
+    #define CPP0X_HAS_CONSTEXPR_FUNCTIONS
+    #define CPP0X_HAS_CONSTEXPR_VARIABLES
+    #define CPP0X_HAS_NOEXCEPT
+    #define CPP0X_HAS_NULLPTR
+
+    #define CPP0X_HAS_ALGORITHM_IS_PARTITIONED
+    #define CPP0X_HAS_ALGORITHM_IS_SORTED
+    #define CPP0X_HAS_ALGORITHM_PARTITION_POINT
+    #define CPP0X_HAS_CSTDDEF_NULLPTR_T
+    #define CPP0X_HAS_ITERATOR_RANGE
+  #endif
+
+#endif
+
+
+// ----------------------------------------------------------------------
+// Core feature workarounds:
+// ----------------------------------------------------------------------
+
+// --- CPP0X_HAS_CONSTEXPR_FUNCTIONS
+#if defined CPP0X_HAS_CONSTEXPR_FUNCTIONS
+  #define CONSTEXPR_FCTN constexpr
+
+#else
+  #define CONSTEXPR_FCTN
+  #define constexpr const
+
+#endif
+
+// --- CPP0X_HAS_CONSTEXPR_VARIABLES
+#if defined CPP0X_HAS_CONSTEXPR_VARIABLES
+  #define CONSTEXPR_VAR constexpr
+
+#else
+  #define CONSTEXPR_VAR const
+  #define constexpr const
+
+#endif
+
+// --- CPP0X_HAS_EXPLICIT_CONVERSION_OPERATORS
+#if defined CPP0X_HAS_EXPLICIT_CONVERSION_OPERATORS
+  #define EXPLICIT_CONV_OP explicit
+
+#else
+  #define EXPLICIT_CONV_OP
+
+#endif
+
+// --- CPP0X_HAS_NOEXCEPT
+#if defined CPP0X_HAS_NOEXCEPT
+
+#elif ! defined noexcept
+  #define noexcept throw()
+
+#endif
+
+// --- CPP0X_HAS_NULLPTR
+#if defined CPP0X_HAS_NULLPTR
+
+#else
+  #include "cpp0x/detail/nullptr"
+#endif
+
+// --- CPP0X_HAS_STATIC_ASSERT
+#if defined CPP0X_HAS_STATIC_ASSERT
+  #define STATIC_ASSERT(pred,mesg) static_assert(pred,mesg)
+
+#else
+  #include <boost/static_assert.hpp>
+  #define STATIC_ASSERT(pred,mesg) BOOST_STATIC_ASSERT((pred))
+
+#endif
+
+// ----------------------------------------------------------------------
+// If library-based workarounds are needed, ensure they are possible:
+// ----------------------------------------------------------------------
+
+#if ! defined CPP0X_HAS_STATIC_ASSERT \
+ || ! defined CPP0X_HAS_ALGORITHM_ALL_OF \
+ || ! defined CPP0X_HAS_ALGORITHM_ANY_OF \
+ || ! defined CPP0X_HAS_ALGORITHM_COPY_N \
+ || ! defined CPP0X_HAS_ALGORITHM_FIND_IF_NOT \
+ || ! defined CPP0X_HAS_ALGORITHM_IS_PARTITIONED \
+ || ! defined CPP0X_HAS_ALGORITHM_IS_SORTED \
+ || ! defined CPP0X_HAS_ALGORITHM_MIN_MAX \
+ || ! defined CPP0X_HAS_ALGORITHM_NONE_OF \
+ || ! defined CPP0X_HAS_ALGORITHM_PARTITION_POINT \
+ || ! defined CPP0X_HAS_ALGORITHM_SHUFFLE \
+ || ! defined CPP0X_HAS_ARRAY_HDR \
+ || ! defined CPP0X_HAS_CSTDDEF_NULLPTR_T \
+ || ! defined CPP0X_HAS_CSTDINT_HDR \
+ || ! defined CPP0X_HAS_FUNCTIONAL_BIND \
+ || ! defined CPP0X_HAS_FUNCTIONAL_FUNCTION \
+ || ! defined CPP0X_HAS_FUNCTIONAL_HASH \
+ || ! defined CPP0X_HAS_FUNCTIONAL_MEM_FN \
+ || ! defined CPP0X_HAS_FUNCTIONAL_REFERENCE_WRAPPER \
+ || ! defined CPP0X_HAS_ITERATOR_RANGE \
+ || ! defined CPP0X_HAS_MEMORY_SHARED_PTR \
+ || ! defined CPP0X_HAS_MEMORY_UNIQUE_PTR \
+ || ! defined CPP0X_HAS_NUMERIC_IOTA \
+ || ! defined CPP0X_HAS_RANDOM_HDR \
+ || ! defined CPP0X_HAS_REGEX_HDR \
+ || ! defined CPP0X_HAS_STRING_NUMERIC_CONVERSIONS \
+ || ! defined CPP0X_HAS_SYSTEM_ERROR_HDR \
+ || ! defined CPP0X_HAS_TUPLE_HDR \
+ || ! defined CPP0X_HAS_TYPE_TRAITS_HDR \
+ || ! defined CPP0X_HAS_UTILITY_DECLVAL \
+
+  #include <boost/version.hpp>
+  #if BOOST_VERSION < 104200
+    #error "boost library version is too old; can't provide library workarounds"
+  #endif
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

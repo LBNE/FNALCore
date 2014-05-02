@@ -21,12 +21,13 @@ include(CheckCXXCompilerFlag)
 # - C++11 Checks
 include(CheckCXX11Features)
 include(CheckCXXStandardLibrary)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")
 
 #-----------------------------------------------------------------------
 # Required Third Party
 #
-find_package(Boost 1.42.0 REQUIRED regex)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost 1.42.0 REQUIRED regex thread)
 
 #-----------------------------------------------------------------------
 # Testing
@@ -36,20 +37,32 @@ if(FNALCore_ENABLE_TESTING)
 endif()
 
 #-----------------------------------------------------------------------
-# cpp0x
-
-#-----------------------------------------------------------------------
-# cetlib
-
-#-----------------------------------------------------------------------
-# fhicl-cpp
-
-#-----------------------------------------------------------------------
-# messagefacility
-
+# Build
+add_subdirectory(FNALCore)
 
 #-----------------------------------------------------------------------
 # Install support files
+#
+configure_package_config_file(
+  cmake/FNALCoreConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/FNALCoreConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FNALCore-${FNALCore_VERSION}
+  PATH_VARS
+    CMAKE_INSTALL_INCLUDEDIR
+    CMAKE_INSTALL_LIBDIR
+  )
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/FNALCoreConfigVersion.cmake
+  VERSION ${FNALCore_VERSION}
+  COMPATIBILITY AnyNewerVersion
+  )
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/FNALCoreConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/FNALCoreConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FNALCore-${FNALCore_VERSION}
+  )
 
 #-----------------------------------------------------------------------
 # Package

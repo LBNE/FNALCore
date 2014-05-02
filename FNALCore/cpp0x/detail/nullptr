@@ -1,0 +1,131 @@
+#ifndef CPP0X_NULLPTR
+#define CPP0X_NULLPTR
+
+// ======================================================================
+//
+// __nullptr: provide __nullptr workaround
+//
+// ----------------------------------------------------------------------
+//
+// This file contains an edited excerpt of libcxx/include/cstddef from
+//                     The LLVM Compiler Infrastructure
+// which is "dual licensed under the MIT and the _University of Illinois
+// Open Source Licenses".  For details, see
+//   http://llvm.org/svn/llvm-project/llvm/trunk/LICENSE.TXT.txt
+//
+// ======================================================================
+
+namespace std {
+namespace _ {
+
+  struct __nullptr_t;
+
+  __nullptr_t  __get_nullptr_t( );
+
+}  // std::_
+}  // std
+
+// ----------------------------------------------------------------------
+
+struct std::_::__nullptr_t
+{
+  void * _;
+  struct __nat { int _; };
+
+  __nullptr_t(              )  { ; }
+  __nullptr_t( int __nat::* )  { ; }
+
+#ifndef __CINT__
+  operator int __nat::* ( ) const  { return 0; }
+#endif
+
+  template< class _Tp >
+    operator _Tp* ( ) const  { return 0; }
+
+#ifndef __CINT__
+  template< class _Tp, class _Up >
+    operator _Tp _Up::* ( ) const  { return 0; }
+#endif
+
+  friend  bool  operator == ( __nullptr_t, __nullptr_t )  { return true;  }
+  friend  bool  operator != ( __nullptr_t, __nullptr_t )  { return false; }
+  friend  bool  operator <  ( __nullptr_t, __nullptr_t )  { return false; }
+  friend  bool  operator <= ( __nullptr_t, __nullptr_t )  { return true;  }
+  friend  bool  operator >  ( __nullptr_t, __nullptr_t )  { return false; }
+  friend  bool  operator >= ( __nullptr_t, __nullptr_t )  { return true;  }
+
+  template< class _Tp >
+    friend  bool  operator == ( __nullptr_t, _Tp * p )  { return 0 == p;  }
+  template< class _Tp >
+    friend  bool  operator != ( __nullptr_t, _Tp * p )  { return 0 != p;  }
+  template< class _Tp >
+    friend  bool  operator <  ( __nullptr_t, _Tp * p )  { return 0 <  p;  }
+  template< class _Tp >
+    friend  bool  operator <= ( __nullptr_t, _Tp * p )  { return 0 <= p;  }
+  template< class _Tp >
+    friend  bool  operator >  ( __nullptr_t, _Tp * p )  { return 0 >  p;  }
+  template< class _Tp >
+    friend  bool  operator >= ( __nullptr_t, _Tp * p )  { return 0 >= p;  }
+
+  template< class _Tp >
+    friend  bool  operator == ( _Tp * p, __nullptr_t )  { return p == 0;  }
+  template< class _Tp >
+    friend  bool  operator != ( _Tp * p, __nullptr_t )  { return p != 0;  }
+  template< class _Tp >
+    friend  bool  operator <  ( _Tp * p, __nullptr_t )  { return p <  0;  }
+  template< class _Tp >
+    friend  bool  operator <= ( _Tp * p, __nullptr_t )  { return p <= 0;  }
+  template< class _Tp >
+    friend  bool  operator >  ( _Tp * p, __nullptr_t )  { return p >  0;  }
+  template< class _Tp >
+    friend  bool  operator >= ( _Tp * p, __nullptr_t )  { return p >= 0;  }
+
+  template< class _Tp, class _Up >
+    friend  bool  operator == ( __nullptr_t, _Tp _Up::* p )  { return 0 == p;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator != ( __nullptr_t, _Tp _Up::* p )  { return 0 != p;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator <  ( __nullptr_t, _Tp _Up::* p )  { return 0 <  p;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator <= ( __nullptr_t, _Tp _Up::* p )  { return 0 <= p;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator >  ( __nullptr_t, _Tp _Up::* p )  { return 0 >  p;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator >= ( __nullptr_t, _Tp _Up::* p )  { return 0 >= p;  }
+
+  template< class _Tp, class _Up >
+    friend  bool  operator == ( _Tp _Up::* p, __nullptr_t )  { return p == 0;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator != ( _Tp _Up::* p, __nullptr_t )  { return p != 0;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator <  ( _Tp _Up::* p, __nullptr_t )  { return p <  0;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator <= ( _Tp _Up::* p, __nullptr_t )  { return p <= 0;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator >  ( _Tp _Up::* p, __nullptr_t )  { return p >  0;  }
+  template< class _Tp, class _Up >
+    friend  bool  operator >= ( _Tp _Up::* p, __nullptr_t )  { return p >= 0;  }
+
+};  // __nullptr_t
+
+// ----------------------------------------------------------------------
+
+#ifndef __CINT__
+inline std::_::__nullptr_t
+  std::_::__get_nullptr_t( )  { return __nullptr_t(0); }
+#endif
+
+// ======================================================================
+
+#endif
+
+// ======================================================================
+
+#if defined nullptr
+  #undef nullptr
+#endif
+#define nullptr ::std::_::__get_nullptr_t()
+
+// ======================================================================
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

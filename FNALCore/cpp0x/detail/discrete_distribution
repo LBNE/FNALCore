@@ -1,0 +1,395 @@
+#ifndef DETAIL_DISCRETE_DISTRIBUTION
+#define DETAIL_DISCRETE_DISTRIBUTION
+
+// ======================================================================
+//
+// discrete_distribution: per C++11 26.5.8.6.1 [rand.dist.samp.discrete]
+//
+// Produce random integers i, 0 <= i < n
+//
+// ======================================================================
+
+#include "cpp0x/algorithm"
+#include "cpp0x/cmath"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/iterator"
+#include "cpp0x/numeric"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+#include <vector>
+
+namespace std {
+
+  template< class Int = int >
+    class discrete_distribution;
+
+  template< class Int, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>      &
+                , discrete_distribution<Int> const &
+                );
+
+  template< class Int, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , discrete_distribution<Int>  &
+                );
+
+}
+
+// ======================================================================
+
+template< class Int >
+  class std::discrete_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_integral<Int>::value
+               , "std::discrete_distribution<> requires an integral type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Int     result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            discrete_distribution( );
+  template< class InIter >
+            discrete_distribution( InIter, InIter );
+  template< class UnaryOp >
+            discrete_distribution( size_t, double, double, UnaryOp );
+  explicit  discrete_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  vector<double>  probabilities( ) const  { return parm.probabilities(); }
+  param_type      param        ( ) const  { return parm; }
+  void            param        ( param_type const & p )  { parm = p; }
+  result_type     min          ( ) const  { return Int(); }
+  result_type     max          ( ) const  { return probabilities().size(); }
+
+  // equality comparisons:
+  bool  operator == ( discrete_distribution const & ) const;
+  bool  operator != ( discrete_distribution const & ) const;
+
+};  // discrete_distribution<>
+
+// ======================================================================
+
+template< class Int >
+  class std::discrete_distribution<Int>::param_t
+{
+  friend  class discrete_distribution<Int>;
+
+private:
+
+  vector<double>  p_;  // cumulative probabilities, once normalized
+
+  // helper functions:
+  void  validate_and_normalize( );
+  template< class URNG >
+    Int  generate( URNG & ) const;
+  static range_error  need_nonNaN_weights;
+  static range_error  need_nonInf_weights;
+  static range_error  need_a_nonzero_weight;
+  static range_error  need_positive_weights;
+
+public:
+
+  // types:
+  typedef  Int                         result_type;
+  typedef  discrete_distribution<Int>  distribution_type;
+
+  // constructors:
+    param_t( );
+  template< class InIter >
+    param_t( InIter, InIter );
+  template< class UnaryOp >
+    param_t( size_t, double, double, UnaryOp );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  vector<double>  probabilities( ) const;
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+};  // discrete_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Int >
+  std::discrete_distribution<Int>::param_t::
+  param_t( )
+: p_( 1, 1.0 )
+{ }
+
+template< class Int >
+template< class InIter >
+  std::discrete_distribution<Int>::param_t::
+  param_t( InIter b, InIter e )
+: p_( b, e )
+{
+  p_.empty()  ?  p_.assign(1, 1.0)
+              :  validate_and_normalize();
+}
+
+template< class Int >
+template< class UnaryOp >
+  std::discrete_distribution<Int>::param_t::
+  param_t( size_t nw, double xmin, double xmax, UnaryOp fw )
+: p_( )
+{
+  if( nw == 0u )
+    p_.assign(1, 1.0);
+  else  {
+    double  delta = (xmax - xmin) / nw;
+    double  arg   = xmin + delta / 2.0;
+    p_.reserve(nw);
+    for( size_t k = 0u; k != nw; ++k )
+      p_.push_back( fw(arg + k * delta) );
+    validate_and_normalize();
+  }
+}
+
+// ----------------------------------------------------------------------
+// property functions:
+
+template< class Int >
+std::vector<double>
+  std::discrete_distribution<Int>::param_t::
+  probabilities( ) const
+{
+  vector<double> p(p_);
+  adjacent_difference(p.begin(), p.end(), p.begin());
+  return p;
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+bool
+  std::discrete_distribution<Int>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return p_ == other.p_;
+}
+
+template< class Int >
+bool
+  std::discrete_distribution<Int>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Int >
+void
+  std::discrete_distribution<Int>::param_t::
+  validate_and_normalize( )
+{
+  typedef  vector<double>::iterator  iter_t;
+  iter_t const begin = p_.begin()
+             , end   = p_.end();
+
+  double S = accumulate(begin, end, 0.0);
+  if     ( isnan(S) )  throw need_nonNaN_weights;
+  else if( isinf(S) )  throw need_nonInf_weights;
+  else if( S == 0.0 )  throw need_a_nonzero_weight;
+
+  for( iter_t b = begin; b != end; ++b )
+    if( *b >= 0.0 )  *b /= S;
+    else             throw need_positive_weights;
+
+  partial_sum(begin, end, begin);
+}
+
+template< class Int >
+template< class URNG >
+Int
+  std::discrete_distribution<Int>::param_t::
+  generate( URNG & u ) const
+{
+  //constexpr size_t  nbits = numeric_limits<double>::digits;
+  //double x = generate_canonical<double,nbits>(u);
+  double x = generate_canonical<double>(u);
+
+  return Int( upper_bound( p_.begin(), p_.end()-1, x )
+            - p_.begin()
+            );
+}
+
+template< class Int >
+std::range_error
+  std::discrete_distribution<Int>::param_t::
+  need_nonNaN_weights("std::discrete_distribution<> requires weights be non-NaN");
+
+template< class Int >
+std::range_error
+  std::discrete_distribution<Int>::param_t::
+  need_nonInf_weights("std::discrete_distribution<> requires weights be non-infinite");
+
+template< class Int >
+std::range_error
+  std::discrete_distribution<Int>::param_t::
+  need_a_nonzero_weight("std::discrete_distribution<> requires at least 1 weight > 0");
+
+template< class Int >
+std::range_error
+  std::discrete_distribution<Int>::param_t::
+  need_positive_weights("std::discrete_distribution<> requires weights be non-negative");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Int >
+  std::discrete_distribution<Int>::
+  discrete_distribution( )
+: parm( )
+{ }
+
+template< class Int >
+template< class InIter >
+  std::discrete_distribution<Int>::
+  discrete_distribution( InIter b, InIter e )
+: parm( b, e )
+{ }
+
+template< class Int >
+template< class UnaryOp >
+  std::discrete_distribution<Int>::
+  discrete_distribution( size_t nw, double xmin, double xmax, UnaryOp fw )
+: parm( nw, xmin, xmax, fw )
+{ }
+
+template< class Int >
+  std::discrete_distribution<Int>::
+  discrete_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Int >
+void
+  std::discrete_distribution<Int>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::discrete_distribution<Int>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::discrete_distribution<Int>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+inline  bool
+  std::discrete_distribution<Int>::
+  operator == ( discrete_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Int >
+bool
+  std::discrete_distribution<Int>::
+  operator != ( discrete_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Int, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>      & os
+                   , discrete_distribution<Int> const & d
+                   )
+{
+  typedef  discrete_distribution<Int>      dist_t;
+  typedef  vector<double>::const_iterator  iter_t;
+
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  vector<double> const & v = d.probabilities();
+  os << v.size();
+
+  for( iter_t b  = v.begin()
+            , e  = v.end(); b != e; ++b )
+    os << sp << *b;
+
+  return os;
+}
+
+template< class Int, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , discrete_distribution<Int>  & d
+                   )
+{
+  typedef  discrete_distribution<Int>    dist_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  size_t sz;         is >> sz;
+  vector<double> v;  v.reserve(sz);
+  copy_n(istream_iterator<double>(is), sz, back_inserter(v));
+  if( ! is.fail() )
+    d.param( param_t(v.begin(), v.end()) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_DISCRETE_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

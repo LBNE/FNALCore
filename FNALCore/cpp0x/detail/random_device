@@ -1,0 +1,105 @@
+#ifndef DETAIL_RANDOM_DEVICE
+#define DETAIL_RANDOM_DEVICE
+
+// ======================================================================
+//
+// random_device: per C++11 26.5.6 [rand.device]
+//
+// ======================================================================
+
+#include "cpp0x/string"
+#include <cstdio>
+#include <limits>
+#include <stdexcept>
+
+// ======================================================================
+
+namespace std {
+
+  class random_device;
+
+}
+
+// ======================================================================
+
+class std::random_device
+{
+
+private:
+
+  FILE *  dev_random;
+
+  // no copy functions:
+  random_device( random_device const & );
+  void
+    operator = ( random_device const & );
+
+public:
+
+  // types:
+  typedef  unsigned int  result_type;
+
+  // generator characteristics:
+  static  constexpr result_type  min = 0u;
+  static  constexpr result_type  max = ~ min;
+
+  // constructors and destructor:
+  explicit
+    random_device( string const & token = "/dev/urandom" );
+  ~random_device( ) noexcept;
+
+  // generating functions:
+  result_type
+    operator () ( );
+
+  // property functions:
+  double
+    entropy() const noexcept;
+
+};  // random_device
+
+// ----------------------------------------------------------------------
+// constructors and destructor:
+
+  std::random_device::
+  random_device( string const & token )
+: dev_random( fopen(token.c_str(), "rb") )
+{
+  if( ! dev_random )
+    throw runtime_error("std::random_device: can't open specified device!");
+}
+
+std::random_device::~random_device( ) noexcept
+{
+  fclose(dev_random);
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+std::random_device::result_type
+  std::random_device::
+  operator () ( )
+{
+  result_type  result;
+  fread( reinterpret_cast<void *>(&result), sizeof(result_type), 1
+       , dev_random
+       );
+  return result;
+}
+
+// ----------------------------------------------------------------------
+// property functions:
+
+double
+  std::random_device::
+  entropy() const noexcept
+{
+  return 0.0;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_RANDOM_DEVICE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
