@@ -134,3 +134,10 @@ install(FILES ${DETAIL_HDRS}
   COMPONENT Development
   )
 
+#-----------------------------------------------------------------------
+# Test if required
+if(FNALCore_ENABLE_TESTING)
+  add_subdirectory(unittests)
+endif()
+
+
