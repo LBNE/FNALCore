@@ -10,6 +10,7 @@ set(FNALCore_VERSION "1.0.0")
 # Standard and Custom CMake Modules
 #
 list(INSERT CMAKE_MODULE_PATH 0
+  ${CMAKE_CURRENT_LIST_DIR}/cmake
   ${CMAKE_CURRENT_LIST_DIR}/cmake/CheckCXX11Features/Modules
   )
 
@@ -34,6 +35,9 @@ find_package(Boost 1.42.0 REQUIRED regex thread)
 option(FNALCore_ENABLE_TESTING "Enable Unit Testing of FNALCore" OFF)
 if(FNALCore_ENABLE_TESTING)
   enable_testing()
+  set(BOOST_NO_SYSTEM_PATHS ON)
+  find_package(Boost ${BOOST_VERSION} REQUIRED unit_test_framework)
+  include(CetTest)
 endif()
 
 #-----------------------------------------------------------------------
