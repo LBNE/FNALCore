@@ -10,6 +10,7 @@
 #include "cetlib/exception.h"
 #include "cetlib/filepath_maker.h"
 #include "cetlib/includer.h"
+#include <iostream>
 #include <fstream>
 #include <sstream>
 
