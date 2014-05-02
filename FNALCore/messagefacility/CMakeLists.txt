@@ -156,5 +156,10 @@ install(FILES ${MessageLogger_HEADERS}
   COMPONENT Development
   )
 
+#-----------------------------------------------------------------------
+# Testing
+if(FNALCore_ENABLE_TESTING)
+  add_subdirectory(unittests)
+endif()
 
 
