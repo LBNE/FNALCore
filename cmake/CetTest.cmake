@@ -369,21 +369,21 @@ FUNCTION(cet_test CET_TARGET)
     IF(CET_HANDBUILT)
       MESSAGE(WARNING "INSTALL_BIN option ignored for HANDBUILT tests.")
     ELSEIF(NOT CET_PREBUILT)
-      INSTALL(TARGETS ${CET_TARGET} DESTINATION ${flavorqual_dir}/bin)
+      #INSTALL(TARGETS ${CET_TARGET} DESTINATION ${flavorqual_dir}/bin)
     ENDIF()
   ENDIF()
   IF(CET_INSTALL_EXAMPLE)
     # Install to examples directory of product.
-    INSTALL(FILES ${CET_SOURCES} ${CET_DATAFILES}
-      DESTINATION ${product}/${version}/example
-      )
+    #INSTALL(FILES ${CET_SOURCES} ${CET_DATAFILES}
+    #  DESTINATION ${product}/${version}/example
+    #  )
   ENDIF()
   IF(CET_INSTALL_SOURCE)
     # Install to sources/test (will need to be amended for eg ART's
     # multiple test directories.
-    INSTALL(FILES ${CET_SOURCES}
-      DESTINATION ${product}/${version}/source/test
-      )
+    #INSTALL(FILES ${CET_SOURCES}
+    #  DESTINATION ${product}/${version}/source/test
+    #  )
   ENDIF()
 ENDFUNCTION(cet_test)
 
