@@ -3,8 +3,23 @@
 # Require 2.8.11 to get the nice interface export features
 cmake_minimum_required(VERSION 2.8.11)
 project(FNALCore)
-set(FNALCore_VERSION "1.0.0")
 
+#-----------------------------------------------------------------------
+# API and ABI versioning
+# NB - this only demonstrates that it *can* be done
+# More info on this at:
+# - http://public.kitware.com/Bug/view.php?id=4383
+# - http://techbase.kde.org/Policies/Binary_Compatibility_Issues_With_C++
+#
+# The following numbers are *arbitrary* for now. Remember that
+# VERSION and SOVERSION do not neccessarily evolve in sync
+set(FNALCore_VERSION "1.0.0")
+set(FNALCore_SOVERSION "1.0.0")
+
+# - We can also use a postfix to distinguish the debug lib from
+# others if different build modes are ABI incompatible (can be
+# extended to other modes)
+set(FNALCore_DEBUG_POSTFIX "d")
 
 #-----------------------------------------------------------------------
 # Standard and Custom CMake Modules
@@ -19,9 +34,13 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 
-# - C++11 Checks
+# - C++11 Check/Configuration
+# To be added: list of C++11 features which *must* be present.
 include(CheckCXX11Features)
 include(CheckCXXStandardLibrary)
+
+# In CMake 2.8.12 and higher, these can be propagated to clients via the
+# target_compile_options command
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")
 
 #-----------------------------------------------------------------------
@@ -70,5 +89,5 @@ install(FILES
 
 #-----------------------------------------------------------------------
 # Package
-#
+# - To be done
 
