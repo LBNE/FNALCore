@@ -1,5 +1,5 @@
-#ifndef MessageLogger_LoggedErrorsSummaryy_h
-#define MessageLogger_LoggedErrorsSummaryEntry_h
+#ifndef MessageLogger_LoggedErrorsSummary_h
+#define MessageLogger_LoggedErrorsSummary_h
 
 // ----------------------------------------------------------------------
 //

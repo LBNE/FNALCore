@@ -12,6 +12,9 @@
 
 #include <string>
 
+// For timeval struct
+#include <sys/time.h>
+
 namespace mf {
 
 class ErrorObj;

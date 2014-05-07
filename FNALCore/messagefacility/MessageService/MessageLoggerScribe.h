@@ -144,9 +144,9 @@ private:
   {
     T t;
     try {
-      t = p.template getUntrackedParameter<T>(id, def);
+      //t = p.template getUntrackedParameter<T>(id, def);
     } catch (...) {
-      t = p.template getParameter<T>(id);
+      //t = p.template getParameter<T>(id);
       std::cerr << "Tracked parameter " << id
                 << " used in MessageLogger configuration.\n"
                 << "Use of tracked parameters for the message service "
@@ -161,20 +161,20 @@ private:
   T getAparameter ( PSet const& p, std::string const & id, T const & def )
   {
     T t;
-    t = p.template getUntrackedParameter<T>(id, def);
+    //t = p.template getUntrackedParameter<T>(id, def);
     return t;
   }                                                             // changelog 2
 #else
 #ifdef VALIDATE_ELSEWHERE
-  template <class T>                                            // ChangeLog 11
+  template <typename T>                                            // ChangeLog 11
   T getAparameter ( PSet const& p, std::string const & id, T const & def )
   {
     T t = def;
     try {
-      t = p.template getUntrackedParameter<T>(id, def);
+      //t = p.template getUntrackedParameter<T>(id, def);
     } catch (...) {
       try {
-        t = p.template getParameter<T>(id);
+        //t = p.template getParameter<T>(id);
       } catch (...) {
         // Since PSetValidation will catch such errors, we simply proceed as
         // best we can in case we are setting up the logger just to contain the
