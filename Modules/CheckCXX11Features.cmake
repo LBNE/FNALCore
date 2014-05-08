@@ -96,12 +96,31 @@ cmake_minimum_required(VERSION 2.8.3)
 ### Check for needed compiler flags
 #
 include(CheckCXXCompilerFlag)
+# Activate standard
 check_cxx_compiler_flag("-std=c++11" _HAS_CXX11_FLAG)
 if(NOT _HAS_CXX11_FLAG)
   check_cxx_compiler_flag("-std=c++0x" _HAS_CXX0X_FLAG)
 endif()
 
+# Activate standard library
+check_cxx_compiler_flag("-stdlib=libc++" _HAS_CXXSTDLIB_FLAG)
+
 if(_HAS_CXX11_FLAG)
+  # Xcode attributes don't get exported to try_compile/run...
+  # Though we should ideally set them...
+  #set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
+  #set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+  # To get try_{compile,run} working correctly with the Xcode generator,
+  # there is an issue with it not forwarding compiler flags to linker,
+  # see the bug report here:
+  #  http://cmake.org/Bug/view.php?id=10552
+  # Means that for Xcode, not sufficient to add -stdlib argument to
+  # compiler flags - must be added to CMAKE_EXE_LINKER_FLAGS linker flags as
+  # well. That can be done via the CMAKE_FLAGS argument of try_{compile,run}
+  # Alternately, CMAKE_FLAGS can be used to set the Xcode attributes above. 
+  # That might be better as it should only affect things when we
+  # run the Xcode generator, whereas setting LINKER_FLAGS applies everywhere
+  #
   set(CXX11_COMPILER_FLAGS "-std=c++11")
 elseif(_HAS_CXX0X_FLAG)
   set(CXX11_COMPILER_FLAGS "-std=c++0x")
@@ -132,6 +151,7 @@ function(cxx11_check_feature FEATURE_NAME RESULT_VAR)
     else()
       try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
         "${_bindir}" "${_SRCFILE}"
+        #CMAKE_FLAGS "-DCMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY='libc++'"
         COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
       if(_COMPILE_RESULT_VAR AND NOT _RUN_RESULT_VAR)
         set(${RESULT_VAR} TRUE)
@@ -142,6 +162,7 @@ function(cxx11_check_feature FEATURE_NAME RESULT_VAR)
       if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL})
         try_run(_RUN_RESULT_VAR _COMPILE_RESULT_VAR
           "${_bindir}_fail" "${_SRCFILE_FAIL}"
+          #CMAKE_FLAGS "-DCMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY='libc++'"
           COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
         if(_COMPILE_RESULT_VAR AND _RUN_RESULT_VAR)
           set(${RESULT_VAR} TRUE)
@@ -153,6 +174,7 @@ function(cxx11_check_feature FEATURE_NAME RESULT_VAR)
 
     if(${RESULT_VAR} AND EXISTS ${_SRCFILE_FAIL_COMPILE})
       try_compile(_TMP_RESULT "${_bindir}_fail_compile" "${_SRCFILE_FAIL_COMPILE}"
+        #CMAKE_FLAGS "-DCMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY='libc++'"
         COMPILE_DEFINITIONS "${CXX11_COMPILER_FLAGS}")
       if(_TMP_RESULT)
         set(${RESULT_VAR} FALSE)

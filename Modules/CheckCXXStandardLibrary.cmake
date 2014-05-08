@@ -13,6 +13,13 @@
 # If the vendor/version cannot be determined, the variables are set
 # to NOTFOUND
 #
+# KNOWN ISSUE : This does not detect the vendor correctly when generating
+# Xcode projects because of the way compiler/linker flags are used in
+# the Xcode generator:
+#  http://cmake.org/Bug/view.php?id=10552
+#
+# This can be worked around, but needs thought because there's an implicit
+# coupling to the initial checks done in CheckCXX11Features.
 
 #-----------------------------------------------------------------------
 # Copyright (c) 2014, Ben Morgan <bmorgan.warwick@gmail.com>
