@@ -64,6 +64,13 @@ endif()
 add_subdirectory(FNALCore)
 
 #-----------------------------------------------------------------------
+# Documentation
+option(FNALCore_BUILD_DOCS "Build documentation for FNALCore" ON)
+if(FNALCore_BUILD_DOCS)
+  add_subdirectory(doc)
+endif()
+
+#-----------------------------------------------------------------------
 # Install support files
 #
 configure_package_config_file(
