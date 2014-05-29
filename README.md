@@ -114,7 +114,7 @@ find_package(FNALCore REQUIRED)
 ```
 
 to your CMake script. If you have installed FNALCore to a non standard
-location, you may need to set FNALCore_DIR or CMAKE_INSTALL_PREFIX.
+location, you may need to set FNALCore_DIR or CMAKE_PREFIX_PATH.
 
 To use the headers and link to the library, you can add
 
