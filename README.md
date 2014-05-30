@@ -10,7 +10,7 @@ There are four of these libraries:
 - messagefacility (logging library)
 
 which are currently supplied through separate repositories
-and build into 3 (cpp0x is header only, but locked to GCC) binary
+and build into 3 (cpp0x is header only, but implies an ABI) binary
 libraries. However, `fhicl-cpp` uses and exposes the `cetlib` interface,
 and `messagefacility` uses and exposes the `fhicl-cpp` and `cetlib`
 interfaces (`cpp0x` is ignored because it is a facade for the C++11
@@ -18,25 +18,28 @@ standard library). Though modularization and reuse is generally good,
 clients of any of these libraries need to be aware of this coupling and
 this can cause issues for clients and developers in maintaining API and
 ABI compatibility. In particular, the dependency graph of the modules,
-whilst acyclic, is vertical.
+whilst acyclic, is vertical, increasing the coupling between them.
 
 Motivated by other "foundation" libraries providing similar functionality
 (core data structures, configuration language parsing, configurable
 logging) in a single layer such as [QtCore](http://qt-project.org/doc/qt-5/qtcore-index.html), [Poco](http://pocoproject.org/) and [CoreFoundation/Cocoa](https://developer.apple.com/technologies/mac/cocoa.html),
 this project merges the four FNAL libraries with the aim of simplifing
 use for clients as well as maintenance by developers.
+Such layers can have relatively diverse functionality because it
+all falls under the purpose of "general utility".
 
 - Source code is kept modular, with one directory per module.
 - A single binary library is created vs three.
-- In future, separate libraries can be built if required.
+- In future, separate libraries can be built if required, but clients still
+interact through the single layer scheme.
 
 The advantages of these schemes for clients is that they only have a
-single package to install and then use. For developers, they can
+single layer to install and then use. For developers, they can
 still develop, say `fhicl-cpp`, in isolation yet get immediate feedback
 at the build stage on whether their changes break clients
 (e.g. `messagefacility`). The scheme also removes the need for a complex
 dependency manager system integrated in the CMake buildtool, allowing
-the full functionality of the tool to be used.
+the full functionality of that tool to be used.
 
 Installation
 ============
@@ -46,12 +49,12 @@ Requirements
 - C++0X/11 compliant compiler (NB, whilst the configuration will
   perform most checks, it's not guaranteed that everything has been
   checked)
-- Boost 1.42 or higher, with regex and thread libraries compiled
-  against C++11. If you want to run the unit tests, the Boost test
+- Boost 1.42 or higher, with filesystem, system, regex and thread libraries
+  compiled against C++11. If you want to run the unit tests, the Boost test
   library is also needed. NB: the C++11 compatibility of the found
   Boost is *not* checked, but an incompatible Boost should cause
   the unit tests to fail. It should be noted that as a robust
-  ABI check is not yet possible, it is up to *you*, not the buildsystem,
+  ABI checks are tricky to implement, it is up to *you*, not the buildsystem,
   to point to the right Boost.
 - Doxygen 1.8 or higher for documentation.
 
@@ -102,6 +105,7 @@ CMAKE_INSTALL_PREFIX/
 +- share/
    +- doc/
       +- FNALCore/
+         +- doxygen/
 ```
 
 
@@ -157,6 +161,21 @@ Any existing code you have written using separately compiled cpp0x,
 cetlib etc is API compatible with FNALCore. The only change that is
 required is to use `find_package(FNALCore)` and to link any binary against
 the FNALCore library instead of the separate cpp0x, cetlib etc libraries.
+
+Documentation
+-------------
+Though FNALCore modules are not fully marked up for Doxygen, you can still
+view what is available by pointing your web browser to the file
+
+```
+CMAKE_INSTALL_PREFIX/
++- share/
+   +- doc/
+      +- FNALCore/
+         +- doxygen/
+            +- html/
+               +- index.html
+```
 
 Licensing
 =========
