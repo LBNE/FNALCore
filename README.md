@@ -17,13 +17,14 @@ interfaces (`cpp0x` is ignored because it is a facade for the C++11
 standard library). Though modularization and reuse is generally good,
 clients of any of these libraries need to be aware of this coupling and
 this can cause issues for clients and developers in maintaining API and
-ABI compatibility.
+ABI compatibility. In particular, the dependency graph of the modules,
+whilst acyclic, is vertical.
 
 Motivated by other "foundation" libraries providing similar functionality
 (core data structures, configuration language parsing, configurable
-logging) such as [QtCore](http://qt-project.org/doc/qt-5/qtcore-index.html), [Poco](http://pocoproject.org/) and [CoreFoundation/Cocoa](https://developer.apple.com/technologies/mac/cocoa.html), this project merges
-the four FNAL libraries with the aim of simplifing use for clients as
-well as maintenance by developers.
+logging) in a single layer such as [QtCore](http://qt-project.org/doc/qt-5/qtcore-index.html), [Poco](http://pocoproject.org/) and [CoreFoundation/Cocoa](https://developer.apple.com/technologies/mac/cocoa.html),
+this project merges the four FNAL libraries with the aim of simplifing
+use for clients as well as maintenance by developers.
 
 - Source code is kept modular, with one directory per module.
 - A single binary library is created vs three.
@@ -35,7 +36,7 @@ still develop, say `fhicl-cpp`, in isolation yet get immediate feedback
 at the build stage on whether their changes break clients
 (e.g. `messagefacility`). The scheme also removes the need for a complex
 dependency manager system integrated in the CMake buildtool, allowing
-the full functionality to be used.
+the full functionality of the tool to be used.
 
 Installation
 ============
