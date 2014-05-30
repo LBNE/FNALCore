@@ -63,3 +63,23 @@ cet_test(value_ptr_test_3)
 cet_test(value_ptr_test_4)
 cet_test(value_ptr_test_5)
 cet_test(zero_init_test USE_BOOST_UNIT)
+
+# - Handbuilt test for LibraryManager
+add_library(test_fakePlugin SHARED moduleType.cc)
+add_executable(LibraryManager_t LibraryManager_t.cc)
+set_target_properties(LibraryManager_t
+  PROPERTIES
+   COMPILE_DEFINITIONS "BOOST_TEST_MAIN;BOOST_TEST_DYN_LINK"
+   )
+target_link_libraries(LibraryManager_t
+  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+configure_file(LibraryManager_t.sh.in LibraryManager_t.sh @ONLY)
+cet_test(LibraryManager_t HANDBUILT TEST_EXEC ${CMAKE_CURRENT_BINARY_DIR}/LibraryManager_t.sh)
+
+# - Plugin test
+# This will fail because unlike the above, it doesn't set LD_LIBRARY_PATH
+add_library(test_TestPluginBase SHARED TestPluginBase.cc)
+add_library(TestPlugin_plugin SHARED TestPlugin_plugin.cc)
+target_link_libraries(TestPlugin_plugin test_TestPluginBase)
+cet_test(PluginFactory_t USE_BOOST_UNIT LIBRARIES test_TestPluginBase)
+

@@ -64,10 +64,16 @@ set_property(TARGET FNALCore
   )
 
 # - Describe link interface
+# Know that filesystem/system are private, needs investigation on the
+# others
 target_link_libraries(FNALCore
-  ${Boost_REGEX_LIBRARY}
-  ${Boost_THREAD_LIBRARY}
-  ${CMAKE_DL_LIBS}
+  LINK_PUBLIC
+    ${Boost_REGEX_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
+    ${CMAKE_DL_LIBS}
+  LINK_PRIVATE
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${BOOST_SYSTEM_LIBRARY}
   )
 
 # - Describe API interface
@@ -89,6 +95,8 @@ target_include_directories(FNALCore
     # a compatible ABI.
     "${Boost_INCLUDE_DIRS}"
   )
+
+
 
 #-----------------------------------------------------------------------
 # Installation

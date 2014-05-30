@@ -47,7 +47,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")
 # Required Third Party
 #
 set(Boost_USE_MULTITHREADED ON)
-find_package(Boost 1.42.0 REQUIRED regex thread)
+find_package(Boost 1.42.0 REQUIRED filesystem system regex thread)
 
 #-----------------------------------------------------------------------
 # Testing

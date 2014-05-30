@@ -9,6 +9,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/shlib_utils.cc.in
 
 set(cetlib_PUBLIC_HDRS
   base_converter.h
+  BasicPluginFactory.h
   bit_manipulation.h
   canonical_number.h
   canonical_string.h
@@ -24,9 +25,11 @@ set(cetlib_PUBLIC_HDRS
   filepath_maker.h
   filesystem.h
   getenv.h
+  hard_cast.h
   hypot.h
   include.h
   includer.h
+  LibraryManager.h
   lpad.h
   make_unique.h
   map_vector.h
@@ -35,6 +38,8 @@ set(cetlib_PUBLIC_HDRS
   name_of.h
   ntos.h
   nybbler.h
+  PluginFactory.h
+  PluginTypeDeducer.h
   pow.h
   registry.h
   registry_via_id.h
@@ -51,6 +56,10 @@ set(cetlib_PUBLIC_HDRS
   zero_init.h
   )
 
+set(cetlib_DETAIL_HDRS
+  detail/wrapLibraryManagerException.h
+  )
+
 set(cetlib_SSL_HDRS
   polarssl/config.h
   polarssl/md5.h
@@ -60,9 +69,11 @@ set(cetlib_SSL_HDRS
 
 set(cetlib_SRCS
   ${CMAKE_CURRENT_BINARY_DIR}/shlib_utils.cc
+  detail/wrapLibraryManagerException.cc
   polarssl/md5.cc
   polarssl/sha1.cc
   base_converter.cc
+  BasicPluginFactory.cc
   canonical_number.cc
   canonical_string.cc
   cpu_timer.cc
@@ -73,10 +84,13 @@ set(cetlib_SRCS
   filepath_maker.cc
   filesystem.cc
   getenv.cc
+  inc-expand.cc
   include.cc
   includer.cc
+  LibraryManager.cc
   lpad.cc
   nybbler.cc
+  PluginFactory.cc
   rpad.cc
   search_path.cc
   simple_stats.cc
@@ -84,11 +98,20 @@ set(cetlib_SRCS
   )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-add_library(cetlib OBJECT ${cetlib_PUBLIC_HDRS} ${cetlib_SSL_HDRS} ${cetlib_SRCS})
+add_library(cetlib OBJECT
+  ${cetlib_PUBLIC_HDRS}
+  ${cetlib_DETAIL_HDRS}
+  ${cetlib_SSL_HDRS}
+  ${cetlib_SRCS}
+  )
 
 # TEMP local install of headers
 install(FILES ${cetlib_PUBLIC_HDRS}
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/cetlib
+  COMPONENT Development
+  )
+install(FILES ${cetlib_DETAIL_HDRS}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/cetlib/detail
   COMPONENT Development
   )
 install(FILES ${cetlib_SSL_HDRS}
