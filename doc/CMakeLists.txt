@@ -9,8 +9,8 @@ find_package(Doxygen 1.8 REQUIRED)
 # or documents.
 # TODO: provide path to tag file as a component in the cmake project
 # config file.
-configure_file(FNALCore.doxyfile.in FNALCore.doxyfile @ONLY)
 set(FNALCore_DOXYGEN_TAGFILE "FNALCore.doxytags")
+configure_file(FNALCore.doxyfile.in FNALCore.doxyfile @ONLY)
 
 add_custom_command(OUTPUT html/index.html
   COMMAND ${DOXYGEN_EXECUTABLE} FNALCore.doxyfile
