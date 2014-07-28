@@ -39,6 +39,11 @@ include(CheckCXXCompilerFlag)
 include(CheckCXX11Features)
 include(CheckCXXStandardLibrary)
 
+# Use of emplace methods in stdlib now requires that (at least)
+# map support this. NEED A CHECK HERE.
+# It appears these are in GCC 4.8, but not 4.7. May not want to
+# support latter, but should still supply a check!!
+
 # In CMake 2.8.12 and higher, these can be propagated to clients via the
 # target_compile_options command
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")

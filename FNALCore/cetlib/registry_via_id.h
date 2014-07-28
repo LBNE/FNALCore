@@ -55,15 +55,32 @@ public:
      begin( )  { return the_registry_().begin(); }
   static  const_iterator
      end( )  { return the_registry_().end(); }
+  static  const_iterator
+     cbegin( )  { return the_registry_().cbegin(); }
+  static  const_iterator
+     cend( )  { return the_registry_().cend(); }
 
   // mutators:
+  // A single V;
   static  typename detail::must_have_id<K,V>::type
     put( V const & value );
+  // A range of iterator to V.
   template< class FwdIt >
-  static  void
+    static
+    typename std::enable_if<std::is_same<typename std::iterator_traits<FwdIt>::value_type,
+                                         mapped_type>::value, void>::type
     put( FwdIt begin, FwdIt end );
+  // A range of iterator to std::pair<K, V>. For each pair, first ==
+  // second.id() is a prerequisite.
+  template< class FwdIt >
+    static
+    typename std::enable_if<std::is_same<typename std::iterator_traits<FwdIt>::value_type,
+                                         value_type>::value, void>::type
+    put( FwdIt begin, FwdIt end );
+  // A collection_type. For each value_type, first == second.id() is a
+  // prerequisite.
   static  void
-    put( collection_type c );
+    put( collection_type const & c );
 
   // accessors:
   static  collection_type const &
@@ -92,33 +109,45 @@ typename cet::detail::must_have_id<K,V>::type
   cet::registry_via_id<K,V>::put( V const & value )
 {
   K id = value.id();
+#if defined(CPP0X_HAS_MAP_EMPLACE)
+  the_registry_().emplace(id, value);
+#else
   the_registry_().insert( std::make_pair(id, value) );
+#endif
   return id;
 }
 
 template< class K, class V >
 template< class FwdIt >
-void
+inline
+auto
   cet::registry_via_id<K,V>::put( FwdIt b, FwdIt e )
+-> typename std::enable_if<std::is_same<typename std::iterator_traits<FwdIt>::value_type,
+                                        mapped_type>::value, void>::type
 {
-  STATIC_ASSERT( (std::is_same< V
-                              , typename std::iterator_traits<FwdIt>::value_type
-                              >::value)
-               , "Iterator is inconsistent"
-                 " with cet::registry_via_id<>'s value_type!"
-               );
   for( ; b != e; ++b )
     (void)put(*b);
 }
 
+template< class K, class V >
+template< class FwdIt >
+inline
+auto
+cet::registry_via_id<K,V>::put( FwdIt b, FwdIt e )
+-> typename std::enable_if<std::is_same<typename std::iterator_traits<FwdIt>::value_type,
+                                        value_type>::value, void>::type
+
+{
+  the_registry_().insert(b, e);
+}
+
 
 template< class K, class V >
+inline
 void
-  cet::registry_via_id<K,V>::put( collection_type c )
+  cet::registry_via_id<K,V>::put( collection_type const & c )
 {
-  for( const_iterator b = c.begin()
-                    , e = c.end(); b != e; ++b )
-    (void)put(b->second);
+  put(c.cbegin(), c.cend());
 }
 
 // ----------------------------------------------------------------------
@@ -137,17 +166,21 @@ V const &
 
 template< class K, class V >
 bool
-  cet::registry_via_id<K,V>::get( K const & key, V & value ) noexcept
-try
+cet::registry_via_id<K,V>::get( K const & key, V & value ) noexcept
 {
-  value = get(key);
-  return true;
+  bool result;
+  const_iterator it = the_registry_().find(key);
+  if( it == the_registry_().end() ) {
+    result = false;
+  } else {
+    value = it->second;
+    result = true;
+  }
+  return result;
 }
-catch( cet::exception const & )
-{
-  return false;
-}
-
-// ======================================================================
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:

@@ -7,10 +7,18 @@ using cet::include;
 
 
 void
-  ensure( int which, bool claim )
+ensure( int which, bool claim )
 {
   if( not claim )
     std::exit(which);
+}
+
+inline
+void
+ensure(int which, std::istream &os)
+{
+  // Force boolean context.
+  ensure(which, !!os);
 }
 
 char const file_a[] = "./a.txt";
@@ -48,13 +56,13 @@ int
   { std::string result;
 
     std::ifstream a(file_a);
-    ensure( 1, static_cast<bool>(a) );
+    ensure( 1, a );
     result.clear();
     include(a, result);
     ensure( 2, result == std::string(contents_a) );
 
     std::ifstream b(file_b);
-    ensure( 3, static_cast<bool>(b) );
+    ensure( 3, b );
     result.clear();
     include(b, result);
     ensure( 4, result == std::string(contents_b) );
@@ -62,7 +70,7 @@ int
 
   { std::string result;
     std::ifstream i(file_i);
-    ensure( 11, static_cast<bool>(i) );
+    ensure( 11, i );
     result.clear();
     include(i, result);
     ensure( 12, result == std::string("begin\n")
@@ -73,7 +81,7 @@ int
 
   { std::string result;
     std::ifstream j(file_j);
-    ensure( 21, static_cast<bool>(j) );
+    ensure( 21, j );
     result.clear();
     include(j, result);
     ensure( 12, result == std::string("begin\n")

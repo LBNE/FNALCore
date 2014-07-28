@@ -8,7 +8,6 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
-#include <iostream>
 
 using namespace fhicl;
 using namespace std;
