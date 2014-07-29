@@ -75,7 +75,7 @@ $ make install
 Selection of compiler, installation prefix and path to Boost can be
 adjusted using the usual CMake variables (TODO: expand this)
 
-If you want to run unit tests, run cmake with the FNALCore_ENABLE_TESTING
+If you want to run unit tests, run cmake with the `FNALCore_ENABLE_TESTING`
 variable set, e.g.
 
 ```
@@ -107,6 +107,19 @@ CMAKE_INSTALL_PREFIX/
       +- FNALCore/
          +- doxygen/
 ```
+
+You can also build source and binary tarballs for redistribution by
+running
+
+```
+$ make package_source
+...
+$ make package
+```
+
+Note that at present the binary tarballs do not provide any dependency
+checking nor refinding of the Boost package required to use FNALCore.
+This will be fixed in future updates.
 
 
 Using FNALCore

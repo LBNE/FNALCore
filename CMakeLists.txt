@@ -13,7 +13,12 @@ project(FNALCore)
 #
 # The following numbers are *arbitrary* for now. Remember that
 # VERSION and SOVERSION do not neccessarily evolve in sync
+# - Hard code version plus Major/Minor/Patch for now
 set(FNALCore_VERSION "1.0.0")
+set(FNALCore_VERSION_MAJOR 1)
+set(FNALCore_VERSION_MINOR 0)
+set(FNALCore_VERSION_PATCH 0)
+
 set(FNALCore_SOVERSION "1.0.0")
 
 # - We can also use a postfix to distinguish the debug lib from
@@ -102,5 +107,6 @@ install(FILES
 
 #-----------------------------------------------------------------------
 # Package
-# - To be done
+#
+include(FNALCoreCPack)
 
