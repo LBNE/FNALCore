@@ -45,12 +45,12 @@ add_library(FNALCore SHARED
   )
 
 # - Set core properties
-#set_target_properties(FNALCore
-#  PROPERTIES
-#    VERSION "${FNALCore_VERSION}"
-#    SOVERSION "${FNALCore_SOVERSION}"
+set_target_properties(FNALCore
+  PROPERTIES
+    VERSION "${FNALCore_VERSION}"
+    SOVERSION "${FNALCore_SOVERSION}"
 #    DEBUG_POSTFIX "${FNALCore_DEBUG_POSTFIX}"
-#  )
+  )
 
 # - Set custom properties
 # Just an example - but should mean consuming targets need same property
