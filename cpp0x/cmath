@@ -1,0 +1,87 @@
+#ifndef CPP0X_CMATH
+#define CPP0X_CMATH
+
+// ======================================================================
+//
+// cmath - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+#include <cmath>
+
+// ----------------------------------------------------------------------
+// fpclassify
+
+#if defined(CPP0X_HAS_CMATH_FPCLASSIFICATION)
+
+#else
+  #include "boost/math/special_functions/fpclassify.hpp"
+  namespace std {
+    using ::boost::math::fpclassify;
+    using ::boost::math::isinf;
+    using ::boost::math::isnan;
+    using ::boost::math::isnormal;
+  }
+
+#endif
+
+// ----------------------------------------------------------------------
+// C99
+
+#if defined(CPP0X_HAS_CMATH_C99)
+
+#else
+  #include <math.h>
+  namespace std {
+    using ::acosh;
+    using ::asinh;
+    using ::atanh;
+    using ::cbrt;
+    using ::copysign;
+    using ::erf;
+    using ::erfc;
+    using ::exp2;
+    using ::expm1;
+    using ::fdim;
+    using ::fma;
+    using ::fmax;
+    using ::fmin;
+    using ::hypot;
+    using ::ilogb;
+    using ::lgamma;
+    using ::llrint;
+    using ::llround;
+    using ::log1p;
+    using ::log2;
+    using ::logb;
+    using ::lrint;
+    using ::lround;
+    using ::nan;
+    using ::nearbyint;
+    using ::nextafter;
+    using ::nexttoward;
+    using ::remainder;
+    using ::remquo;
+    using ::rint;
+    using ::round;
+    using ::scalbln;
+    using ::scalbn;
+    using ::tgamma;
+    using ::trunc;
+  }
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

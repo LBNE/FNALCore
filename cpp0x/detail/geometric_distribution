@@ -1,0 +1,303 @@
+#ifndef DETAIL_GEOMETRIC_DISTRIBUTION
+#define DETAIL_GEOMETRIC_DISTRIBUTION
+
+// ======================================================================
+//
+// geometric_distribution: per C++11 26.5.8.3.3 [rand.dist.bern.geo]
+//
+// Produce integer values 0 <= i
+//
+// ======================================================================
+
+#include "cpp0x/detail/bernoulli_distribution"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Int = int >
+    class geometric_distribution;
+
+  template< class Int, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>       &
+                , geometric_distribution<Int> const &
+                );
+
+  template< class Int, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , geometric_distribution<Int> &
+                );
+
+}
+
+// ======================================================================
+
+template< class Int >
+  class std::geometric_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_integral<Int>::value
+               , "std::geometric_distribution<> requires an integral type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Int      result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            geometric_distribution( );
+  explicit  geometric_distribution( double );
+  explicit  geometric_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  double       p    ( ) const  { return parm.p(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return Int(); }
+  result_type  max  ( ) const  { return numeric_limits<Int>::max(); }
+
+  // equality comparisons:
+  bool  operator == ( geometric_distribution const & ) const;
+  bool  operator != ( geometric_distribution const & ) const;
+
+};  // geometric_distribution<>
+
+// ======================================================================
+
+template< class Int >
+  class std::geometric_distribution<Int>::param_t
+{
+  friend  class geometric_distribution<Int>;
+
+private:
+  double  p_;
+
+  // helper functions:
+  template< class URNG >
+    Int  generate( URNG & ) const;
+  static range_error bad_p;
+
+public:
+
+  // types:
+  typedef  Int                          result_type;
+  typedef  geometric_distribution<Int>  distribution_type;
+
+  // constructors:
+  explicit  param_t( double = 0.5 );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  double  p( ) const  { return p_; }
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+  // statistics:
+  _::stats  expected( ) const;
+
+};  // geometric_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Int >
+  std::geometric_distribution<Int>::param_t::
+  param_t( double p )
+: p_( 0.0 < p && p < 1.0 ? p : throw bad_p )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+bool
+  std::geometric_distribution<Int>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return p_ == other.p_;
+}
+
+template< class Int >
+bool
+  std::geometric_distribution<Int>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+template< class Int >
+std::_::stats
+  std::geometric_distribution<Int>::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  p        = p_
+           ,  mean     = (1.0L - p) / p
+           ,  variance = mean / p
+           ,  skew     = (2.0L - p) / sqrt(1.0L - p)
+           ,  kurtosis = 6.0L + p * p / (1.0L - p);
+
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Int >
+template< class URNG >
+Int
+  std::geometric_distribution<Int>::param_t::
+  generate( URNG & u ) const
+{
+  bernoulli_distribution  bern_d(p_);
+  Int  k = Int();
+  while( ! bern_d(u) )
+    ++k;
+  return k;
+}
+
+template< class Int >
+std::range_error
+  std::geometric_distribution<Int>::param_t::
+  bad_p("std::geometric_distribution<> requires 0 < p < 1");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Int >
+  std::geometric_distribution<Int>::
+  geometric_distribution( )
+: parm( )
+{ }
+
+template< class Int >
+  std::geometric_distribution<Int>::
+  geometric_distribution( double p )
+: parm( p )
+{ }
+
+template< class Int >
+  std::geometric_distribution<Int>::
+  geometric_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Int >
+void
+  std::geometric_distribution<Int>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::geometric_distribution<Int>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::geometric_distribution<Int>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+inline  bool
+  std::geometric_distribution<Int>::
+  operator == ( geometric_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Int >
+bool
+  std::geometric_distribution<Int>::
+  operator != ( geometric_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Int, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>      & os
+                   , geometric_distribution<Int> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+
+  return os << d.p();
+}
+
+template< class Int, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , geometric_distribution<Int>  & d
+                   )
+{
+  typedef  geometric_distribution<Int>   dist_t;
+  typedef  typename dist_t::result_type  result_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  double    p;
+  is >> p;
+  if( ! is.fail() )
+    d.param( param_t(p) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_GEOMETRIC_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
