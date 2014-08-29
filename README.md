@@ -250,4 +250,53 @@ in the following cases.
     message for the subtree add.
   - Graphical viewers such as `gitk` will show the complete tree
 
+Updating the Subtrees
+---------------------
+Whilst a `git pull` (or fetch/merge) will update everything, this does not
+update the subtrees from the upstream repositories they were created from.
+To update the subtrees from their upstream repos, we need to pull in changes
+for each individually. This could be scripted in the long term, though
+it's expected that adoption of FNALCore would result in retirement of
+the separate repos.
+
+The easiest way to set things up is to add remotes for each parent repo
+as a shorthand.
+
+```sh
+$ git remote add cpp0x-upstream https://github.com/LBNE/fnal-cpp0x.git
+...
+$ git remote add cetlib-upstream https://github.com/LBNE/fnal-cetlib.git
+...
+$ git remote add fhiclcpp-upstream https://github.com/LBNE/fnal-fhicl-cpp.git
+...
+$ git remote add messagefacility-upstream https://github.com/LBNE/fnal-messagefacility.git
+```
+
+Each subtree is then updated by a fetch from the remote followed by a
+`subtree pull` (NB, these commands must be performed in the top level directory, i.e. the location of the `.git` directory)
+
+```sh
+$ git fetch cpp0x-upstream
+$ git subtree pull --prefix=FNALCore/cpp0x cpp0x-upstream master
+```
+
+The same syntax can be used with the other subtrees, just change the
+remote name and prefix as needed. It's not completely clear whether the `fetch` is always needed for every pull (but it doesn't hurt).
+
+
+Pushing Local Subtree Changes Upstream
+--------------------------------------
+We may make local modifications to files under the subtrees, for example
+patches for Mac. To push these upstream, you need to have write permission
+to the upstream repo. If you do, then  but if you do, then all that needs to be done is
+
+```sh
+$ git subtree push --prefix=FNALCore/cpp0x cpp0x-upstream master
+```
+
+and similarly for the other subtrees. It's this separation of the trees
+that means you must keep commits "atomic" to the subtree. For example,
+if you patch something in `FNALCore/cetlib` which also affects something
+  in `FNALCore/fhicl-cpp`, then perform two separate commits, one for each
+  tree.
 
