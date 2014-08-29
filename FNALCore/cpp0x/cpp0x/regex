@@ -1,0 +1,74 @@
+#ifndef CPP0X_REGEX
+#define CPP0X_REGEX
+
+// ======================================================================
+//
+// regex - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+// ----------------------------------------------------------------------
+// <regex>
+
+#if defined(CPP0X_HAS_REGEX_HDR)
+  #include <regex>
+
+#else
+  #include "boost/regex.hpp"
+  namespace std {
+    namespace regex_constants = ::boost::regex_constants;
+    using ::boost::regex_error;
+    using ::boost::regex_traits;
+
+    using ::boost::basic_regex;
+    using ::boost::regex;
+    using ::boost::wregex;
+
+    using ::boost::swap;
+
+    using ::boost::sub_match;
+    using ::boost::csub_match;
+    using ::boost::wcsub_match;
+    using ::boost::ssub_match;
+    using ::boost::wssub_match;
+
+    using ::boost::match_results;
+    using ::boost::cmatch;
+    using ::boost::wcmatch;
+    using ::boost::smatch;
+    using ::boost::wsmatch;
+
+    using ::boost::regex_match;
+
+    using ::boost::regex_search;
+
+    using ::boost::regex_replace;
+
+    using ::boost::regex_iterator;
+    using ::boost::cregex_iterator;
+    using ::boost::wcregex_iterator;
+    using ::boost::sregex_iterator;
+    using ::boost::wsregex_iterator;
+
+    using ::boost::regex_token_iterator;
+    using ::boost::cregex_token_iterator;
+    using ::boost::wcregex_token_iterator;
+    using ::boost::sregex_token_iterator;
+    using ::boost::wsregex_token_iterator;
+  }
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

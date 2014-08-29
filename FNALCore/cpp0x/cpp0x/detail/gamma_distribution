@@ -1,0 +1,386 @@
+#ifndef DETAIL_GAMMA_DISTRIBUTION
+#define DETAIL_GAMMA_DISTRIBUTION
+
+// ======================================================================
+//
+// gamma_distribution: per C++11 26.5.8.4.3 [rand.dist.pois.gamma]
+//
+// Produce values x, 0 < x
+//
+// ======================================================================
+
+#include "cpp0x/cmath"
+#include "cpp0x/detail/exponential_distribution"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Real = double >
+    class gamma_distribution;
+
+  template< class Real, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>    &
+                , gamma_distribution<Real> const &
+                );
+
+  template< class Real, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , gamma_distribution<Real>    &
+                );
+
+}
+
+// ======================================================================
+
+template< class Real >
+  class std::gamma_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_floating_point<Real>::value
+               , "std::gamma_distribution<> requires a floating-point type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Real     result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            gamma_distribution( );
+  explicit  gamma_distribution( Real );
+            gamma_distribution( Real, Real );
+  explicit  gamma_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  Real         alpha( ) const  { return parm.alpha(); }
+  Real         beta ( ) const  { return parm.beta(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return numeric_limits<Real>::min(); }
+  result_type  max  ( ) const  { return numeric_limits<Real>::infinity(); }
+
+  // equality comparisons:
+  bool  operator == ( gamma_distribution const & ) const;
+  bool  operator != ( gamma_distribution const & ) const;
+
+};  // gamma_distribution<>
+
+// ======================================================================
+
+template< class Real >
+  class std::gamma_distribution<Real>::param_t
+{
+  friend  class gamma_distribution<Real>;
+
+private:
+  Real  alpha_;
+  Real  beta_;
+
+  // helper functions:
+  template< class URNG >
+    Real  generate( URNG & ) const;
+  bool  reject( Real, Real, Real ) const;
+  static range_error bad_alpha;
+  static range_error bad_beta;
+
+public:
+
+  // types:
+  typedef  Real                      result_type;
+  typedef  gamma_distribution<Real>  distribution_type;
+
+  // constructors:
+  explicit  param_t( Real = Real(1.0), Real = Real(1.0) );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  Real    alpha( ) const  { return alpha_; }
+  Real    beta ( ) const  { return beta_; }
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+  // statistics:
+  _::stats  expected( ) const;
+
+};  // gamma_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Real >
+  std::gamma_distribution<Real>::param_t::
+  param_t( Real alpha, Real beta )
+: alpha_( Real(0.0) < alpha ? alpha : throw bad_alpha )
+, beta_ ( Real(0.0) < beta  ? beta  : throw bad_beta )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Real >
+bool
+  std::gamma_distribution<Real>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return alpha_ == other.alpha_
+      && beta_  == other.beta_;
+}
+
+template< class Real >
+bool
+  std::gamma_distribution<Real>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+template< class Real >
+std::_::stats
+  std::gamma_distribution<Real>::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  alpha    = alpha_
+           ,  beta     = beta_
+           ,  mean     = alpha * beta
+           ,  variance = alpha * beta * beta
+           ,  skew     = 2.0L / sqrt(alpha)
+           ,  kurtosis = 6.0L / alpha;
+
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Real >
+template< class URNG >
+Real
+  std::gamma_distribution<Real>::param_t::
+  generate( URNG & urng ) const
+{
+  constexpr size_t  nbits = numeric_limits<Real>::digits;
+  constexpr Real  one(1.0), two(2.0);
+
+  if( alpha_ == one )
+    return beta_ * exponential_distribution<Real>()(urng);
+
+  else if ( alpha_ < one ) {  // Best-Ahrens-Dieter
+    Real const  alpha_minus_one = alpha_ - one
+             ,  one_minus_alpha = - alpha_minus_one
+             ,  alpha_inv       = one / alpha_
+             ,  t               = 0.07 + 0.75 * sqrt(one_minus_alpha)
+             ,  b               = one + (exp(-t) * alpha_) / t;
+
+    while( true )  {
+      Real const  u1 = generate_canonical<Real,nbits>(urng)
+               ,  u2 = generate_canonical<Real,nbits>(urng)
+               ,  v  = b * u1;
+
+      if( v <= one )  {
+        Real x  = t * pow(v,alpha_inv);
+        if( u2 <= (two - x) / (two + x) )  return beta_ * x;
+        if( u2 <= exp(-x)               )  return beta_ * x;
+      }
+      else  {
+        Real const  x = - log(t * (b-v) * alpha_inv);
+        Real const  y = x / t;
+        if( u2 * (alpha_ + y * one_minus_alpha) <= one )  return beta_ * x;
+        if( u2 <= pow(y, alpha_minus_one)              )  return beta_ * x;
+      }
+    }
+  }  // Best-Ahrens-Dieter
+
+  else /* alpha_ > one */  {  // Cheng-Feast
+    Real const  alpha_minus_one = alpha_ - 1.0;
+    Real const  a6              = alpha_minus_one / (6.0 * alpha_);
+
+    Real u, v, k;
+    do  {
+      u  = generate_canonical<Real,nbits>(urng);
+      v  = generate_canonical<Real,nbits>(urng);
+      k = (a6 * u) / (alpha_minus_one * v);
+    }  while( reject(v, k, alpha_minus_one) );
+
+    return beta_ * alpha_minus_one * k;
+  }  // Cheng-Feast
+
+}  // generate()
+
+template< class Real >
+bool
+  std::gamma_distribution<Real>::param_t::
+  reject( Real v, Real k, Real alpha_minus_one ) const
+{
+  constexpr Real  one(1.0), two(2.0);
+
+  return ( ( two * (v - one) / alpha_minus_one
+           + k
+           + one / k
+           ) > two
+         )
+      && ( ( two * log(v) / alpha_minus_one
+           - log(k)
+           + k
+           ) > one
+         )
+      ;
+}  // reject()
+
+template< class Real >
+std::range_error
+  std::gamma_distribution<Real>::param_t::
+  bad_alpha("std::gamma_distribution<> requires 0 < alpha");
+
+template< class Real >
+std::range_error
+  std::gamma_distribution<Real>::param_t::
+  bad_beta("std::gamma_distribution<> requires 0 < beta");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Real >
+  std::gamma_distribution<Real>::
+  gamma_distribution( )
+: parm( )
+{ }
+
+template< class Real >
+  std::gamma_distribution<Real>::
+  gamma_distribution( Real alpha )
+: parm( alpha )
+{ }
+
+template< class Real >
+  std::gamma_distribution<Real>::
+  gamma_distribution( Real alpha, Real beta )
+: parm( alpha, beta )
+{ }
+
+template< class Real >
+  std::gamma_distribution<Real>::
+  gamma_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Real >
+void
+  std::gamma_distribution<Real>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Real >
+template< class URNG >
+inline  Real
+  std::gamma_distribution<Real>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Real >
+template< class URNG >
+inline  Real
+  std::gamma_distribution<Real>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Real >
+inline  bool
+  std::gamma_distribution<Real>::
+  operator == ( gamma_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Real >
+bool
+  std::gamma_distribution<Real>::
+  operator != ( gamma_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Real, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>    & os
+                   , gamma_distribution<Real> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  return os << d.alpha() << sp << d.beta();
+}
+
+template< class Real, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , gamma_distribution<Real>    & d
+                   )
+{
+  typedef  gamma_distribution<Real>      dist_t;
+  typedef  typename dist_t::result_type  result_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  double alpha, beta;
+  is >> alpha >> beta;
+  if( ! is.fail() )
+    d.param( param_t(alpha, beta) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_GAMMA_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

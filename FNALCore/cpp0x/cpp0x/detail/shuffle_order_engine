@@ -1,0 +1,309 @@
+#ifndef DETAIL_SHUFFLE_ORDER_ENGINE
+#define DETAIL_SHUFFLE_ORDER_ENGINE
+
+// ======================================================================
+//
+// shuffle_order_engine:  per C++11 26.5.4.4 [rand.adapt.shuf]
+//
+// ======================================================================
+
+#include "cpp0x/algorithm"
+#include "cpp0x/cstddef"
+#include "cpp0x/detail/stream_state_guard"
+#include <iosfwd>
+
+// ======================================================================
+
+namespace std {
+
+  template< class Engine, size_t k >
+    class shuffle_order_engine;
+
+  template< class Engine, size_t k, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>          &
+                , shuffle_order_engine<Engine,k> const &
+                );
+
+  template< class Engine, size_t k, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>    &
+                , shuffle_order_engine<Engine,k> &
+                );
+
+}
+
+// ======================================================================
+
+template< class Engine, size_t k >
+  class std::shuffle_order_engine
+{
+  // useful types and constants:
+  typedef  typename Engine::result_type result_t;
+  static  constexpr result_t  zero  = 0u
+                           ,  one   = 1u
+                           ,  R     = Engine::max - Engine::min + one
+                           ;
+
+  // validate parameters:
+  STATIC_ASSERT( 0u < k, "std::shuffle_order_engine<> requires 0 < k" );
+
+private:
+  Engine    e;
+  result_t  Y;
+  result_t  V[k];
+
+public:
+
+  // types:
+  typedef  typename Engine::result_type  result_type;
+
+  // engine characteristics:
+  static  constexpr size_t       table_size = k;
+  static  constexpr result_type  min        = Engine::min;
+  static  constexpr result_type  max        = Engine::max;
+
+  // constructors and seeding functions:
+  shuffle_order_engine( );
+  void
+    seed( );
+  explicit
+    shuffle_order_engine( result_type );
+  void
+    seed( result_type );
+  template< class Sseq >
+  explicit
+    shuffle_order_engine( Sseq &
+                        , typename
+                          enable_if< _::is_sseq< Sseq
+                                               , shuffle_order_engine
+                                               >::value
+                                   >::type * = nullptr
+                        );
+  template< class Sseq >
+  typename enable_if< _::is_sseq< Sseq
+                                , shuffle_order_engine
+                                >::value
+                    >::type
+    seed( Sseq & );
+
+  // use compiler-generated copy assignment and d'tor
+
+  // copy functions:
+  explicit
+    shuffle_order_engine( shuffle_order_engine const & );
+
+  // generating functions:
+  result_type
+    operator () ( );
+  void
+    discard( unsigned long long );
+
+  // property functions:
+  Engine const &
+    base( ) const noexcept;
+
+  // equality comparisons:
+  bool
+    operator == ( shuffle_order_engine const & ) const;
+  bool
+    operator != ( shuffle_order_engine const & ) const;
+
+  // i/o:
+  template< class E, size_t K, class charT, class traits >
+  friend basic_ostream<charT, traits> &
+    operator << ( basic_ostream<charT,traits>     &
+                , shuffle_order_engine<E,K> const &
+                );
+  template< class E, size_t K, class charT, class traits >
+  friend basic_istream<charT, traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , shuffle_order_engine<E,K>   &
+                );
+
+};  // shuffle_order_engine<>
+
+// ----------------------------------------------------------------------
+// constructors and seeding functions:
+
+template< class Engine, size_t k >
+  std::shuffle_order_engine<Engine,k>::
+  shuffle_order_engine( )
+: e( )
+{
+  generate(V+0, V+k, e);
+  Y = e();
+}
+
+template< class Engine, size_t k >
+  std::shuffle_order_engine<Engine,k>::
+  shuffle_order_engine( result_type s )
+: e( s )
+{
+  generate(V+0, V+k, e);
+  Y = e();
+}
+
+template< class Engine, size_t k >
+template< class Sseq >
+  std::shuffle_order_engine<Engine,k>::
+  shuffle_order_engine( Sseq & q
+                            , typename
+                              enable_if< _::is_sseq< Sseq
+                                                   , shuffle_order_engine
+                                                   >::value
+                                       >::type *
+                            )
+: e( q )
+{
+  generate(V+0, V+k, e);
+  Y = e();
+}
+
+template< class Engine, size_t k >
+void
+  std::shuffle_order_engine<Engine,k>::
+  seed( )
+{
+  e.seed();
+  generate(V+0, V+k, e);
+  Y = e();
+}
+
+template< class Engine, size_t k >
+void
+  std::shuffle_order_engine<Engine,k>::
+  seed( result_type s )
+{
+  e.seed(s);
+  generate(V+0, V+k, e);
+  Y = e();
+}
+
+template< class Engine, size_t k >
+template< class Sseq >
+typename std::enable_if< std::_::is_sseq< Sseq
+                                        , std::shuffle_order_engine<Engine,k>
+                                        >::value
+                       >::type
+  std::shuffle_order_engine<Engine,k>::
+  seed( Sseq & q )
+{
+  e.seed(q);
+  generate(V+0, V+k, e);
+  Y = e();
+}
+
+// ----------------------------------------------------------------------
+// copy constructors:
+
+template< class Engine, size_t k >
+  std::shuffle_order_engine<Engine,k>::
+  shuffle_order_engine( shuffle_order_engine const & other )
+: e( other.e )
+, Y( other.Y )
+{
+  copy(other.V+0, other.V+k, V+0);
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Engine, size_t k >
+typename std::shuffle_order_engine<Engine,k>::result_type
+  std::shuffle_order_engine<Engine,k>::
+  operator () ( )
+{
+  result_type j = R == zero ? zero
+                            : k * (Y - min) / R;
+  Y = V[j];
+  V[j] = e();
+  return Y;
+}
+
+template< class Engine, size_t k >
+void
+  std::shuffle_order_engine<Engine,k>::
+  discard( unsigned long long z )
+{
+  for(  ; z != 0uLL; --z )
+    (*this)( );
+}
+
+// ----------------------------------------------------------------------
+// property functions:
+
+template< class Engine, size_t k >
+Engine const &
+  std::shuffle_order_engine<Engine,k>::
+  base( ) const noexcept
+{
+  return e;
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Engine, size_t k >
+bool
+  std::shuffle_order_engine<Engine,k>::
+  operator == ( shuffle_order_engine const & other ) const
+{
+  return e == other.e
+      && Y == other.Y
+      && equal(V+0, V+k, other.V+0);
+}
+
+template< class Engine, size_t k >
+bool
+  std::shuffle_order_engine<Engine,k>::
+  operator != ( shuffle_order_engine const & other ) const
+{
+  return ! (*this == other );
+}
+
+// ----------------------------------------------------------------------
+// i/o:
+
+template< class Engine, size_t k, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>          & os
+                   , shuffle_order_engine<Engine,k> const & e
+                   )
+{
+  typedef  typename Engine::result_type  result_t;
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  os << e.e;
+  for( result_t const * p = e.V+0; p != e.V+k; ++p )
+    os << sp << *p;
+  return os << sp << e.Y;
+}
+
+template< class Engine, size_t k, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>    & is
+                   , shuffle_order_engine<Engine,k> & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(is);
+
+  Engine tmp_e;
+  typename Engine::result_type tmp_V[k];
+  typename Engine::result_type tmp_Y;
+  is >> tmp_e;
+  copy_n(istream_iterator<typename Engine::result_type>(is), k, tmp_V+0);
+  is >> tmp_Y;
+
+  if( ! is.fail() )
+    e.e = tmp_e, copy(tmp_V+0, tmp_V+k, e.V+0), e.Y = tmp_Y;
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_SHUFFLE_ORDER_ENGINE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

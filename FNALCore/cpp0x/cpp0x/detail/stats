@@ -1,0 +1,91 @@
+#ifndef _STATS
+#define _STATS
+
+// ======================================================================
+//
+// stats: gather sample statistics
+//
+// ======================================================================
+
+#include "cpp0x/cmath"
+#include "cpp0x/cstddef"
+#include "cpp0x/numeric"
+
+namespace std {
+namespace _ {
+
+  class stats;
+
+}  // std::_
+}  // std
+
+// ======================================================================
+
+class std::_::stats
+{
+private:
+  typedef  long double  ldbl;
+
+  ldbl mean_
+     , variance_
+     , skew_
+     , kurtosis_
+     ;
+
+public:
+  // c'tors:
+    stats( )
+  : mean_    ( 0.0L )
+  , variance_( 0.0L )
+  , skew_    ( 0.0L )
+  , kurtosis_( 0.0L )
+  { }
+
+    stats( ldbl mean, ldbl vari, ldbl skew, ldbl kurt )
+  : mean_    ( mean )
+  , variance_( vari )
+  , skew_    ( skew )
+  , kurtosis_( kurt )
+  { }
+
+  template< class FwdIter >
+    stats( FwdIter const b, size_t const n )
+  : mean_    ( 0.0L )
+  , variance_( 0.0L )
+  , skew_    ( 0.0L )
+  , kurtosis_( 0.0L )
+  {
+    FwdIter const e = b + n;
+    mean_ = accumulate(b, e, mean_) / n;
+    for( FwdIter p = b; p != e; ++p ) {
+      ldbl const  dev  = *p - mean_
+               ,  dev2 = dev * dev
+               ,  dev3 = dev * dev2
+               ,  dev4 = dev * dev3
+               ;
+      variance_ += dev2;
+      skew_     += dev3;
+      kurtosis_ += dev4;
+    }
+    variance_ /= n;
+    ldbl stddev = sqrt(variance_);
+    skew_     /= n * stddev * variance_;
+    kurtosis_ /= n * variance_ * variance_;
+    kurtosis_ -= 3.0L;
+  }
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // observers:
+  ldbl  mean    ( ) const { return mean_;     }
+  ldbl  variance( ) const { return variance_; }
+  ldbl  skew    ( ) const { return skew_;     }
+  ldbl  kurtosis( ) const { return kurtosis_; }
+
+};
+
+// ======================================================================
+
+#endif  // _STATS
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

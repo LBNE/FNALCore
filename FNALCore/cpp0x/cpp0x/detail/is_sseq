@@ -1,0 +1,41 @@
+#ifndef _IS_SSEQ
+#define _IS_SSEQ
+
+// ======================================================================
+//
+// is_sseq: type trait detecting a seed_sequence type
+//
+// ======================================================================
+
+#include "cpp0x/type_traits"
+
+namespace std {
+namespace _ {
+
+  template< class Sseq, class Engine >
+    struct is_sseq;
+
+}  // std::_
+}  // std
+
+// ======================================================================
+
+template< class Sseq, class Engine >
+  struct std::_::is_sseq
+{
+  static  constexpr bool  value =
+      ! is_convertible< Sseq
+                      , typename Engine::result_type
+                      >::value
+    &&
+      ! is_same< typename remove_cv<Sseq>::type
+               , Engine
+               >::value
+    ;
+};
+
+// ======================================================================
+
+#endif  // _IS_SSEQ
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
