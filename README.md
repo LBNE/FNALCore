@@ -4,10 +4,10 @@ A study of merging the FNAL libraries providing "foundation" functionality
 for the [art](https://cdcvs.fnal.gov/redmine/projects/art) framework.
 There are four of these libraries:
 
-- cpp0x (provide C++11 features for partially compilant compilers)
-- cetlib (low level routines)
-- fhicl-cpp (fhicl configuration language parser and data structures)
-- messagefacility (logging library)
+- [cpp0x](https://cdcvs.fnal.gov/redmine/projects/cpp0x) (provide C++11 features for partially compilant compilers)
+- [cetlib](https://cdcvs.fnal.gov/redmine/projects/cetlib) (low level routines)
+- [fhicl-cpp](https://cdcvs.fnal.gov/redmine/projects/fhicl-cpp) (fhicl configuration language parser and data structures)
+- [messagefacility](https://cdcvs.fnal.gov/redmine/projects/messagefacility) (logging library)
 
 which are currently supplied through separate repositories
 and build into 3 (cpp0x is header only, but implies an ABI) binary
@@ -194,4 +194,60 @@ Licensing
 =========
 Original code from upstream uses the GPLv2'd polarssl lib, so FNALCore
 is GPLv2.
+
+Git Repository Layout
+=====================
+FNALCore originally copied files from each of the subprojects in by
+hand. Whilst useful for the prototype stage, the full demonstrator
+requires some connection back to the upstream FNAL repositories to
+
+- Make updates easier
+- Retain upstream commits so that patches to the C++ code can be
+  submitted upstream.
+- Retain upstream commits so that future adoption of FNALCore
+  holds prior history of files.
+
+Git offers several options for this, the most common being submodules
+and subtrees. The latter are used currently as they seem to offer the
+"simplest" approach given the above. There is plenty of discussion
+on the web on submodules vs subtrees, and a good starting point
+can be found on the following page:
+
+- http://blogs.atlassian.com/2013/05/alternatives-to-git-submodule-git-subtree/
+
+The major change to the structure of FNALCore is that each library
+is now stored via subtrees
+
+```
++- FNALCore.git
+   +- FNALCore/
+      +- cpp0x/ -> subtree
+         +- CMakeLists.txt
+         +- cpp0x/
+         +- test/
+```
+
+The subtrees themselves use the master branches of the
+[LBNE mirrors](https://github.com/LBNE) of
+[cpp0x](https://github.com/LBNE/fnal-cpp0x),
+[cetlib](https://github.com/LBNE/fnal-cetlib),
+[fhicl-cpp](https://github.com/LBNE/fnal-fhicl-cpp)
+and
+[messagefacility](https://github.com/LBNE/fnal-messagefacility)
+
+There are still some gotchas with the subtree approach, so care is needed
+in the following cases.
+
+1. Local commits should not cross subtree boundaries. This is so
+   that commits can easily be split out of a subtree and pushed back
+   upstream if required.
+  - Subtree prefixes can be found by `git log | grep git-subtree-dir`
+2. `git log` will show the commits from all the subtrees
+3. `git log <subtreeprefix>` will not show the commit logs of the subtree
+  - This can be worked around by supplying the SHA1 of the commit
+    in the subtree at the point it was added in, e.g.
+    `git log <sha1> <subtreepath>`. These SHA1s are stored in the commit
+    message for the subtree add.
+  - Graphical viewers such as `gitk` will show the complete tree
+
 
