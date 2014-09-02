@@ -33,7 +33,7 @@ set(FNALCore_MODULES cpp0x cetlib fhiclcpp messagefacility)
 #    VERSION "${FNALCore_VERSION}"
 #    SOVERSION "${FNALCore_SOVERSION}"
 #    DEBUG_POSTFIX "${FNALCore_DEBUG_POSTFIX}"
-  )
+#  )
 
 # - Set custom properties
 # Just an example - but should mean consuming targets need same property
@@ -41,7 +41,8 @@ set(FNALCore_MODULES cpp0x cetlib fhiclcpp messagefacility)
 #set_property(TARGET FNALCore
 #  APPEND PROPERTY
 #  COMPATIBLE_INTERFACE_STRING CXX_STANDARD
-  )
+#  )
+
 #set_property(TARGET FNALCore
 #  PROPERTY INTERFACE_CXX_STANDARD 11
 #  )
