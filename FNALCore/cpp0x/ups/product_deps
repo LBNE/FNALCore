@@ -1,6 +1,6 @@
 # The parent line must be the first non-comment line in the file
 # This line defines the product name and version
-parent cpp0x v1_04_07
+parent cpp0x v1_04_08
 defaultqual e6
 # These optional lines define the installed directories where
 # headers, libraries, and executables will be found
@@ -21,7 +21,7 @@ boost		v1_56_0
 gcc		v4_8_2		e5
 gcc		v4_9_1		e6
 icc		v14_0_2
-cetbuildtools	v4_01_01	-	only_for_build
+cetbuildtools	v4_01_03	-	only_for_build
 end_product_list
 
 # Matrix of qualifiers versus dependent products
