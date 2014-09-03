@@ -44,10 +44,16 @@ include(CheckCXXCompilerFlag)
 include(CheckCXX11Features)
 include(CheckCXXStandardLibrary)
 
-# Use of emplace methods in stdlib now requires that (at least)
-# map support this. NEED A CHECK HERE.
-# It appears these are in GCC 4.8, but not 4.7. May not want to
-# support latter, but should still supply a check!!
+# Use of emplace methods in modules now requires that (at least)
+# map support this. As cpp0x does not provide a workaround, fail
+# if CXX11 checks are not present
+if(NOT HAS_CXX11_VECTOR_EMPLACE)
+  message(FATAL_ERROR "${CMAKE_CXX_COMPILER} does not support std::vector emplace member functions")
+endif()
+
+if(NOT HAS_CXX11_MAP_EMPLACE)
+  message(FATAL_ERROR "${CMAKE_CXX_COMPILER} does not support std::map emplace member functions")
+endif()
 
 # In CMake 2.8.12 and higher, these can be propagated to clients via the
 # target_compile_options command

@@ -49,6 +49,12 @@ Requirements
 - C++0X/11 compliant compiler (NB, whilst the configuration will
   perform most checks, it's not guaranteed that everything has been
   checked)
+  - The `cpp0x` module provides minimal implementations of some
+    C++11 features, but is not complete.
+  - Boost implementations are used in some cases.
+  - Features that the compiler/standard library *must* provide include
+    (not complete as yet):
+    - `emplace` member functions of `std::` collections.
 - Boost 1.42 or higher, with filesystem, system, regex and thread libraries
   compiled against C++11. If you want to run the unit tests, the Boost test
   library is also needed. NB: the C++11 compatibility of the found
