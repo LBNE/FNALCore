@@ -15,7 +15,7 @@ configure_file(FNALCore.doxyfile.in FNALCore.doxyfile @ONLY)
 add_custom_command(OUTPUT html/index.html
   COMMAND ${DOXYGEN_EXECUTABLE} FNALCore.doxyfile
   MAIN_DEPENDENCY FNALCore.doxyfile
-  DEPENDS FNALCore
+  #DEPENDS FNALCore
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Doxygenating FNALCore"
   )
