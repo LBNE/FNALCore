@@ -44,6 +44,7 @@
 #  HAS_CXX11_LAMBDA             - lambdas
 #  HAS_CXX11_LIB_REGEX          - regex library
 #  HAS_CXX11_LONG_LONG          - long long signed & unsigned types
+#  HAS_CXX11_MAP_EMPLACE        - std::map has emplace methods
 #  HAS_CXX11_MEMORY_SHARED_PTR  - memory header provides shared_ptr
 #  HAS_CXX11_MEMORY_UNIQUE_PTR  - memory header provides unique_ptr
 #  HAS_CXX11_NOEXCEPT           - noexcept specifier
@@ -60,6 +61,7 @@
 #  HAS_CXX11_TYPE_TRAITS        - type_traits header
 #  HAS_CXX11_UTILITY_DECLVAL    - utility header provides declval
 #  HAS_CXX11_VARIADIC_TEMPLATES - variadic templates
+#  HAS_CXX11_VECTOR_EMPLACE     - std::vector has emplace member functions
 
 #=============================================================================
 # Copyright 2011,2012 Rolf Eike Beer <eike@sf-mail.de>
@@ -93,10 +95,13 @@ endif()
 cmake_minimum_required(VERSION 2.8.3)
 
 #
-### Check for needed compiler flags
+### Check for available/needed compiler flags
 #
 include(CheckCXXCompilerFlag)
-# Activate standard
+
+# For the "-std" family, can have 'c++1z' (C++17), 'c++14' (C++14),
+# 'c++1y' (C++14), 'c++11' (C++11), 'c++0x' (C++11)
+
 check_cxx_compiler_flag("-std=c++11" _HAS_CXX11_FLAG)
 if(NOT _HAS_CXX11_FLAG)
   check_cxx_compiler_flag("-std=c++0x" _HAS_CXX0X_FLAG)
@@ -117,7 +122,7 @@ if(_HAS_CXX11_FLAG)
   # Means that for Xcode, not sufficient to add -stdlib argument to
   # compiler flags - must be added to CMAKE_EXE_LINKER_FLAGS linker flags as
   # well. That can be done via the CMAKE_FLAGS argument of try_{compile,run}
-  # Alternately, CMAKE_FLAGS can be used to set the Xcode attributes above. 
+  # Alternately, CMAKE_FLAGS can be used to set the Xcode attributes above.
   # That might be better as it should only affect things when we
   # run the Xcode generator, whereas setting LINKER_FLAGS applies everywhere
   #
@@ -228,6 +233,7 @@ cxx11_check_feature("initializer_list" HAS_CXX11_INITIALIZER_LIST)
 cxx11_check_feature("lambda" HAS_CXX11_LAMBDA)
 cxx11_check_feature("lib_regex" HAS_CXX11_LIB_REGEX)
 cxx11_check_feature("long_long" HAS_CXX11_LONG_LONG)
+cxx11_check_feature("map_emplace" HAS_CXX11_MAP_EMPLACE)
 cxx11_check_feature("memory_shared_ptr" HAS_CXX11_MEMORY_SHARED_PTR)
 cxx11_check_feature("memory_unique_ptr" HAS_CXX11_MEMORY_UNIQUE_PTR)
 cxx11_check_feature("noexcept" HAS_CXX11_NOEXCEPT)
@@ -244,4 +250,4 @@ cxx11_check_feature("tuple" HAS_CXX11_TUPLE)
 cxx11_check_feature("type_traits" HAS_CXX11_TYPE_TRAITS)
 cxx11_check_feature("utility_declval" HAS_CXX11_UTILITY_DECLVAL)
 cxx11_check_feature("variadic_templates" HAS_CXX11_VARIADIC_TEMPLATES)
-
+cxx11_check_feature("vector_emplace" HAS_CXX11_VECTOR_EMPLACE)
