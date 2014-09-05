@@ -62,6 +62,7 @@ Requirements
   the unit tests to fail. It should be noted that as a robust
   ABI checks are tricky to implement, it is up to *you*, not the buildsystem,
   to point to the right Boost.
+- SQLite3 3.7.15 or higher for fhiclcpp database support.
 - Doxygen 1.8 or higher for documentation.
 
 How to Install
