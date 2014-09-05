@@ -7,7 +7,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------
 # Compose FNALCore
-set(FNALCore_MODULES cpp0x )#cetlib fhiclcpp messagefacility)
+set(FNALCore_MODULES cpp0x cetlib)#fhiclcpp messagefacility)
 foreach(fcmodule ${FNALCore_MODULES})
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${fcmodule})
@@ -24,7 +24,7 @@ set_target_properties(${FNALCore_MODULES}
 # - Create library from modules
 add_library(FNALCore SHARED
   $<TARGET_OBJECTS:cpp0x>
-#  $<TARGET_OBJECTS:cetlib>
+  $<TARGET_OBJECTS:cetlib>
 #  $<TARGET_OBJECTS:fhiclcpp>
 #  $<TARGET_OBJECTS:messagefacility>
   )
@@ -59,7 +59,7 @@ target_link_libraries(FNALCore
     ${CMAKE_DL_LIBS}
   LINK_PRIVATE
     ${Boost_FILESYSTEM_LIBRARY}
-    ${BOOST_SYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
   )
 
 # - Describe API interface
@@ -68,7 +68,7 @@ target_link_libraries(FNALCore
 target_include_directories(FNALCore
   INTERFACE
     # Build interface applies if a client uses find_package against builddir
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/cpp0x>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/cpp0x;${CMAKE_CURRENT_SOURCE_DIR}/cetlib>"
     # Install interface applies if client uses find_package against installdir
     "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/FNALCore>"
 
