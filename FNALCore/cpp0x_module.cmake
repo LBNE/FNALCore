@@ -46,74 +46,80 @@ set(CPP0X_HAS_TUPLE_HDR ${HAS_CXX11_TUPLE})
 set(CPP0X_HAS_TYPE_TRAITS_HDR ${HAS_CXX11_TYPE_TRAITS})
 set(CPP0X_HAS_UTILITY_DECLVAL ${HAS_CXX11_UTILITY_DECLVAL})
 
+#-----------------------------------------------------------------------
+# Base directories and sources
+#
+set(cpp0x_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cpp0x")
+set(cpp0x_INCLUDE_DIR "${cpp0x_ROOT_DIR}/cpp0x")
 
 # - Build cpp0x
 set( PUBLIC_HDRS
-  algorithm
-  array
-  cmath
-  cstddef
-  cstdint
-  functional
-  iterator
-  memory
-  numeric
-  random
-  regex
-  string
-  system_error
-  tuple
-  type_traits
-  utility
+ ${cpp0x_INCLUDE_DIR}/algorithm
+ ${cpp0x_INCLUDE_DIR}/array
+ ${cpp0x_INCLUDE_DIR}/cmath
+ ${cpp0x_INCLUDE_DIR}/compiler_macros.h
+ ${cpp0x_INCLUDE_DIR}/cstddef
+ ${cpp0x_INCLUDE_DIR}/cstdint
+ ${cpp0x_INCLUDE_DIR}/functional
+ ${cpp0x_INCLUDE_DIR}/iterator
+ ${cpp0x_INCLUDE_DIR}/memory
+ ${cpp0x_INCLUDE_DIR}/numeric
+ ${cpp0x_INCLUDE_DIR}/random
+ ${cpp0x_INCLUDE_DIR}/regex
+ ${cpp0x_INCLUDE_DIR}/string
+ ${cpp0x_INCLUDE_DIR}/system_error
+ ${cpp0x_INCLUDE_DIR}/tuple
+ ${cpp0x_INCLUDE_DIR}/type_traits
+ ${cpp0x_INCLUDE_DIR}/utility
 )
 
 set( DETAIL_HDRS
-  detail/a_x_plus_c_mod_m
-  detail/add_rv_ref
-  detail/bernoulli_distribution
-  detail/binomial_distribution
-  detail/cauchy_distribution
-  detail/chi_squared_distribution
-  detail/declval
-  detail/discard_block_engine
-  detail/discrete_distribution
-  detail/exponential_distribution
-  detail/extreme_value_distribution
-  detail/fisher_f_distribution
-  detail/gamma_distribution
-  detail/generate_canonical
-  detail/geometric_distribution
-  detail/independent_bits_engine
-  detail/is_nonnegative
-  detail/is_sseq
-  detail/linear_congruential_engine
-  detail/log2
-  detail/lognormal_distribution
-  detail/low_order_bits
-  detail/mersenne_twister_engine
-  detail/negative_binomial_distribution
-  detail/normal_distribution
-  detail/nullptr
-  detail/piecewise_constant_distribution
-  detail/piecewise_linear_distribution
-  detail/poisson_distribution
-  detail/pow2
-  detail/predefined_engine_types
-  detail/random_device
-  detail/seed_seq
-  detail/shuffle_order_engine
-  detail/stats
-  detail/stream_state_guard
-  detail/student_t_distribution
-  detail/subtract_with_carry_engine
-  detail/uniform_int_distribution
-  detail/uniform_real_distribution
-  detail/unique_ptr
-  detail/weibull_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/a_x_plus_c_mod_m
+ ${cpp0x_INCLUDE_DIR}/detail/add_rv_ref
+ ${cpp0x_INCLUDE_DIR}/detail/bernoulli_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/binomial_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/cauchy_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/chi_squared_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/declval
+ ${cpp0x_INCLUDE_DIR}/detail/discard_block_engine
+ ${cpp0x_INCLUDE_DIR}/detail/discrete_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/exponential_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/extreme_value_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/fisher_f_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/gamma_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/generate_canonical
+ ${cpp0x_INCLUDE_DIR}/detail/geometric_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/independent_bits_engine
+ ${cpp0x_INCLUDE_DIR}/detail/is_nonnegative
+ ${cpp0x_INCLUDE_DIR}/detail/is_sseq
+ ${cpp0x_INCLUDE_DIR}/detail/linear_congruential_engine
+ ${cpp0x_INCLUDE_DIR}/detail/log2
+ ${cpp0x_INCLUDE_DIR}/detail/lognormal_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/low_order_bits
+ ${cpp0x_INCLUDE_DIR}/detail/mersenne_twister_engine
+ ${cpp0x_INCLUDE_DIR}/detail/negative_binomial_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/normal_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/nullptr
+ ${cpp0x_INCLUDE_DIR}/detail/piecewise_constant_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/piecewise_linear_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/poisson_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/pow2
+ ${cpp0x_INCLUDE_DIR}/detail/predefined_engine_types
+ ${cpp0x_INCLUDE_DIR}/detail/random_device
+ ${cpp0x_INCLUDE_DIR}/detail/seed_seq
+ ${cpp0x_INCLUDE_DIR}/detail/shuffle_order_engine
+ ${cpp0x_INCLUDE_DIR}/detail/stats
+ ${cpp0x_INCLUDE_DIR}/detail/stream_state_guard
+ ${cpp0x_INCLUDE_DIR}/detail/student_t_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/subtract_with_carry_engine
+ ${cpp0x_INCLUDE_DIR}/detail/uniform_int_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/uniform_real_distribution
+ ${cpp0x_INCLUDE_DIR}/detail/unique_ptr
+ ${cpp0x_INCLUDE_DIR}/detail/weibull_distribution
 )
 
-configure_file(detail/config.in ${CMAKE_CURRENT_BINARY_DIR}/detail/config)
-list(APPEND DETAIL_HDRS ${CMAKE_CURRENT_BINARY_DIR}/detail/config)
+configure_file(cpp0x-config.in ${CMAKE_CURRENT_BINARY_DIR}/cpp0x/detail/config)
+list(APPEND DETAIL_HDRS ${CMAKE_CURRENT_BINARY_DIR}/cpp0x/detail/config)
 
 set_source_files_properties(${PUBLIC_HDRS} ${DETAIL_HDRS}
   PROPERTIES
@@ -137,7 +143,7 @@ install(FILES ${DETAIL_HDRS}
 #-----------------------------------------------------------------------
 # Test if required
 if(FNALCore_ENABLE_TESTING)
-  add_subdirectory(unittests)
+  include(cpp0x_module_tests.cmake)
 endif()
 
 
