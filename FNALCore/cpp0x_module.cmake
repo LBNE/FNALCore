@@ -140,10 +140,3 @@ install(FILES ${DETAIL_HDRS}
   COMPONENT Development
   )
 
-#-----------------------------------------------------------------------
-# Test if required
-if(FNALCore_ENABLE_TESTING)
-  include(cpp0x_module_tests.cmake)
-endif()
-
-

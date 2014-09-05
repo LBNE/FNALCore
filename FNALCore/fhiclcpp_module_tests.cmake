@@ -3,7 +3,7 @@
 # Testing
 #
 # ======================================================================
-
+return()
 include(CetTest)
 #cet_enable_asserts()
 

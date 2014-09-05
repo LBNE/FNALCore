@@ -4,15 +4,18 @@
 # yet how to propagate these correctly from an object library to
 # the target adding the object library - hence the "quick and dirty"!
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${SQLite3_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------
 # Compose FNALCore
-set(FNALCore_MODULES cpp0x cetlib)#fhiclcpp messagefacility)
+set(FNALCore_MODULES cpp0x cetlib fhiclcpp)# messagefacility)
+
 foreach(fcmodule ${FNALCore_MODULES})
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${fcmodule})
   include(${fcmodule}_module.cmake)
 endforeach()
+
 # PIC needed for shared libs, as OBJECT type libs are built without
 # it. We always build FNALCore as a shared lib at the moment. PIC
 # *should* be o.k. for static libs, but needs further study
@@ -25,7 +28,7 @@ set_target_properties(${FNALCore_MODULES}
 add_library(FNALCore SHARED
   $<TARGET_OBJECTS:cpp0x>
   $<TARGET_OBJECTS:cetlib>
-#  $<TARGET_OBJECTS:fhiclcpp>
+  $<TARGET_OBJECTS:fhiclcpp>
 #  $<TARGET_OBJECTS:messagefacility>
   )
 
@@ -54,6 +57,7 @@ set_property(TARGET FNALCore
 # others
 target_link_libraries(FNALCore
   LINK_PUBLIC
+    ${SQLite3_LIBRARIES}
     ${Boost_REGEX_LIBRARY}
     ${Boost_THREAD_LIBRARY}
     ${CMAKE_DL_LIBS}
@@ -68,7 +72,7 @@ target_link_libraries(FNALCore
 target_include_directories(FNALCore
   INTERFACE
     # Build interface applies if a client uses find_package against builddir
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/cpp0x;${CMAKE_CURRENT_SOURCE_DIR}/cetlib>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/cpp0x;${CMAKE_CURRENT_SOURCE_DIR}/cetlib;${CMAKE_CURRENT_SOURCE_DIR}/fhiclcpp>"
     # Install interface applies if client uses find_package against installdir
     "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/FNALCore>"
 
@@ -80,7 +84,15 @@ target_include_directories(FNALCore
     # and COMPATIBLE_INTERFACE properties can be used to ensure
     # a compatible ABI.
     "${Boost_INCLUDE_DIRS}"
+    "${SQLite3_INCLUDE_DIRS}"
   )
+
+#-----------------------------------------------------------------------
+# Tests
+foreach(fcmodule ${FNALCore_MODULES})
+  include(${fcmodule}_module_tests.cmake)
+endforeach()
+
 
 #-----------------------------------------------------------------------
 # Installation

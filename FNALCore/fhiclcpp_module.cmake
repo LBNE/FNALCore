@@ -1,28 +1,38 @@
+#-----------------------------------------------------------------------
+# Base directories and sources
+#
+set(fhiclcpp_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fhiclcpp")
+set(fhiclcpp_INCLUDE_DIR "${fhiclcpp_ROOT_DIR}/fhiclcpp")
+
+
 # define contents of interest:
 set(PUBLIC_HDRS
-  ParameterSet.h
-  ParameterSetID.h
-  ParameterSetRegistry.h
-  coding.h
-  exception.h
-  extended_value.h
-  fwd.h
-  intermediate_table.h
-  make_ParameterSet.h
-  parse.h
-  tokens.h
-  type_traits.h
+  ${fhiclcpp_INCLUDE_DIR}/DatabaseSupport.h
+  ${fhiclcpp_INCLUDE_DIR}/ParameterSet.h
+  ${fhiclcpp_INCLUDE_DIR}/ParameterSetID.h
+  ${fhiclcpp_INCLUDE_DIR}/ParameterSetRegistry.h
+  ${fhiclcpp_INCLUDE_DIR}/coding.h
+  ${fhiclcpp_INCLUDE_DIR}/exception.h
+  ${fhiclcpp_INCLUDE_DIR}/extended_value.h
+  ${fhiclcpp_INCLUDE_DIR}/fwd.h
+  ${fhiclcpp_INCLUDE_DIR}/intermediate_table.h
+  ${fhiclcpp_INCLUDE_DIR}/make_ParameterSet.h
+  ${fhiclcpp_INCLUDE_DIR}/parse.h
+  ${fhiclcpp_INCLUDE_DIR}/tokens.h
+  ${fhiclcpp_INCLUDE_DIR}/type_traits.h
 )
 
 set(SOURCES
-  ParameterSet.cc
-  ParameterSetID.cc
-  coding.cc
-  exception.cc
-  extended_value.cc
-  intermediate_table.cc
-  make_ParameterSet.cc
-  parse.cc
+  ${fhiclcpp_INCLUDE_DIR}/DatabaseSupport.cc
+  ${fhiclcpp_INCLUDE_DIR}/ParameterSet.cc
+  ${fhiclcpp_INCLUDE_DIR}/ParameterSetID.cc
+  ${fhiclcpp_INCLUDE_DIR}/ParameterSetRegistry.cc
+  ${fhiclcpp_INCLUDE_DIR}/coding.cc
+  ${fhiclcpp_INCLUDE_DIR}/exception.cc
+  ${fhiclcpp_INCLUDE_DIR}/extended_value.cc
+  ${fhiclcpp_INCLUDE_DIR}/intermediate_table.cc
+  ${fhiclcpp_INCLUDE_DIR}/make_ParameterSet.cc
+  ${fhiclcpp_INCLUDE_DIR}/parse.cc
 )
 
 
@@ -33,12 +43,5 @@ install(FILES ${PUBLIC_HDRS}
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/fhiclcpp
   COMPONENT Development
   )
-
-#-----------------------------------------------------------------------
-# Testing
-if(FNALCore_ENABLE_TESTING)
-  add_subdirectory(unittests)
-endif()
-
 
 # ======================================================================
