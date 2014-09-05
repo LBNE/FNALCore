@@ -8,7 +8,7 @@ include_directories(${SQLite3_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------
 # Compose FNALCore
-set(FNALCore_MODULES cpp0x cetlib fhiclcpp)# messagefacility)
+set(FNALCore_MODULES cpp0x cetlib fhiclcpp messagefacility)
 
 foreach(fcmodule ${FNALCore_MODULES})
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -29,7 +29,7 @@ add_library(FNALCore SHARED
   $<TARGET_OBJECTS:cpp0x>
   $<TARGET_OBJECTS:cetlib>
   $<TARGET_OBJECTS:fhiclcpp>
-#  $<TARGET_OBJECTS:messagefacility>
+  $<TARGET_OBJECTS:messagefacility>
   )
 
 # - Set core properties
@@ -72,7 +72,7 @@ target_link_libraries(FNALCore
 target_include_directories(FNALCore
   INTERFACE
     # Build interface applies if a client uses find_package against builddir
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/cpp0x;${CMAKE_CURRENT_SOURCE_DIR}/cetlib;${CMAKE_CURRENT_SOURCE_DIR}/fhiclcpp>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/cpp0x;${CMAKE_CURRENT_SOURCE_DIR}/cetlib;${CMAKE_CURRENT_SOURCE_DIR}/fhiclcpp;${CMAKE_CURRENT_SOURCE_DIR}/messagefacility>"
     # Install interface applies if client uses find_package against installdir
     "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/FNALCore>"
 
