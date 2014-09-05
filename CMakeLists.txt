@@ -66,6 +66,8 @@ set(Boost_USE_MULTITHREADED ON)
 set(FNALCore_BOOST_COMPONENTS filesystem system regex thread)
 find_package(Boost 1.42.0 REQUIRED ${FNALCore_BOOST_COMPONENTS})
 
+find_package(SQLite3 3.7.15 REQUIRED)
+
 #-----------------------------------------------------------------------
 # Testing
 option(FNALCore_ENABLE_TESTING "Enable Unit Testing of FNALCore" OFF)
