@@ -39,6 +39,9 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 
+# - Local Customs
+include(CetDummy)
+
 # - C++11 Check/Configuration
 # To be added: list of C++11 features which *must* be present.
 include(CheckCXX11Features)

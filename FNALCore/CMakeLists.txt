@@ -19,18 +19,25 @@ endforeach()
 # PIC needed for shared libs, as OBJECT type libs are built without
 # it. We always build FNALCore as a shared lib at the moment. PIC
 # *should* be o.k. for static libs, but needs further study
-set_target_properties(${FNALCore_MODULES}
+set_target_properties(obj-cpp0x obj-cetlib obj-fhiclcpp #obj-messagefacility
   PROPERTIES
     POSITION_INDEPENDENT_CODE TRUE
   )
 
 # - Create library from modules
 add_library(FNALCore SHARED
-  $<TARGET_OBJECTS:cpp0x>
-  $<TARGET_OBJECTS:cetlib>
-  $<TARGET_OBJECTS:fhiclcpp>
-  $<TARGET_OBJECTS:messagefacility>
+  $<TARGET_OBJECTS:obj-cpp0x>
+  $<TARGET_OBJECTS:obj-cetlib>
+  $<TARGET_OBJECTS:obj-fhiclcpp>
+  $<TARGET_OBJECTS:obj-messagefacility>
   )
+
+# - Create aliases picked up in tests
+add_library(cpp0x ALIAS FNALCore)
+add_library(cetlib ALIAS FNALCore)
+add_library(fhiclcpp ALIAS FNALCore)
+add_library(messagefacility ALIAS FNALCore)
+
 
 # - Set core properties
 set_target_properties(FNALCore
@@ -89,10 +96,11 @@ target_include_directories(FNALCore
 
 #-----------------------------------------------------------------------
 # Tests
-foreach(fcmodule ${FNALCore_MODULES})
-  include(${fcmodule}_module_tests.cmake)
-endforeach()
-
+if(FNALCore_ENABLE_TESTING)
+  add_subdirectory(cpp0x/test)
+  include(cetlib_module_tests.cmake)
+  add_subdirectory(fhiclcpp/test)
+endif()
 
 #-----------------------------------------------------------------------
 # Installation

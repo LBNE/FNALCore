@@ -101,7 +101,7 @@ set(cetlib_SRCS
   )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-add_library(cetlib OBJECT
+add_library(obj-cetlib OBJECT
   ${cetlib_PUBLIC_HDRS}
   ${cetlib_DETAIL_HDRS}
   ${cetlib_SSL_HDRS}

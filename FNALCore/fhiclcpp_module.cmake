@@ -36,7 +36,7 @@ set(SOURCES
 )
 
 
-add_library(fhiclcpp OBJECT ${PUBLIC_HDRS} ${SOURCES})
+add_library(obj-fhiclcpp OBJECT ${PUBLIC_HDRS} ${SOURCES})
 
 # TEMP local install of headers
 install(FILES ${PUBLIC_HDRS}

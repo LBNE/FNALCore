@@ -128,7 +128,7 @@ set_source_files_properties(${PUBLIC_HDRS} ${DETAIL_HDRS}
 
 #-----------------------------------------------------------------------
 # Create a dummy library to check export
-add_library(cpp0x OBJECT dummy.cc ${PUBLIC_HDRS} ${DETAIL_HDRS})
+add_library(obj-cpp0x OBJECT dummy.cc ${PUBLIC_HDRS} ${DETAIL_HDRS})
 
 # TEMP local install of headers
 install(FILES ${PUBLIC_HDRS}

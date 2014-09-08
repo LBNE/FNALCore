@@ -140,7 +140,7 @@ set_source_files_properties(${MessageFacility_HEADERS}
     HEADER_FILE_ONLY TRUE
   )
 
-add_library(messagefacility OBJECT
+add_library(obj-messagefacility OBJECT
   ${MessageFacility_HEADERS}
   ${MessageFacility_SOURCES}
   ${MessageFacility_Utilities_HEADERS}
