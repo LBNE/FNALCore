@@ -1,7 +1,7 @@
 # - FNALCore top level build
 # Project setup
-# Require 2.8.11 to get the nice interface export features
-cmake_minimum_required(VERSION 2.8.11)
+# Require 2.8.12 for INTERFACE_ support and target ALIAS
+cmake_minimum_required(VERSION 2.8.12)
 project(FNALCore)
 
 #-----------------------------------------------------------------------
@@ -66,6 +66,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")
 # Required Third Party
 #
 set(Boost_USE_MULTITHREADED ON)
+set(Boost_NO_BOOST_CMAKE ON)
 set(FNALCore_BOOST_COMPONENTS filesystem system regex thread)
 find_package(Boost 1.42.0 REQUIRED ${FNALCore_BOOST_COMPONENTS})
 

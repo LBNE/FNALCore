@@ -19,7 +19,7 @@ endforeach()
 # PIC needed for shared libs, as OBJECT type libs are built without
 # it. We always build FNALCore as a shared lib at the moment. PIC
 # *should* be o.k. for static libs, but needs further study
-set_target_properties(obj-cpp0x obj-cetlib obj-fhiclcpp #obj-messagefacility
+set_target_properties(obj-cpp0x obj-cetlib obj-fhiclcpp obj-messagefacility
   PROPERTIES
     POSITION_INDEPENDENT_CODE TRUE
   )
