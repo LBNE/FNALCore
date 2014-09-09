@@ -45,7 +45,7 @@ Installation
 ============
 Requirements
 ------------
-- CMake 2.8.11 or above
+- CMake 2.8.12 or above
 - C++0X/11 compliant compiler (NB, whilst the configuration will
   perform most checks, it's not guaranteed that everything has been
   checked)
