@@ -35,8 +35,26 @@ set(SOURCES
   ${fhiclcpp_INCLUDE_DIR}/parse.cc
 )
 
-
 add_library(obj-fhiclcpp OBJECT ${PUBLIC_HDRS} ${SOURCES})
+
+add_executable(fhicl-expand ${fhiclcpp_INCLUDE_DIR}/fhicl-expand.cc)
+target_link_libraries(fhicl-expand
+  FNALCore
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  )
+
+add_executable(fhicl-write-db ${fhiclcpp_INCLUDE_DIR}/fhicl-write-db.cc)
+target_link_libraries(fhicl-write-db
+  FNALCore
+  ${SQLite3_LIBRARIES}
+  )
+
+# TEMP local install of exes
+install(TARGETS fhicl-expand fhicl-write-db
+  EXPORT FNALCoreExports
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT Runtime
+  )
 
 # TEMP local install of headers
 install(FILES ${PUBLIC_HDRS}

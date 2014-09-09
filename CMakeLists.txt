@@ -67,7 +67,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")
 #
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_NO_BOOST_CMAKE ON)
-set(FNALCore_BOOST_COMPONENTS filesystem system regex thread)
+set(FNALCore_BOOST_COMPONENTS
+  filesystem
+  system
+  regex
+  thread
+  program_options
+  )
 find_package(Boost 1.42.0 REQUIRED ${FNALCore_BOOST_COMPONENTS})
 
 find_package(SQLite3 3.7.15 REQUIRED)
