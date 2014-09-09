@@ -108,6 +108,20 @@ add_library(obj-cetlib OBJECT
   ${cetlib_SRCS}
   )
 
+add_executable(inc-expand ${cetlib_INCLUDE_DIR}/inc-expand.cc)
+target_link_libraries(inc-expand
+  FNALCore
+  ${Boost_FILESYSTEM_LIBRARY}
+  ${Boost_REGEX_LIBRARY}
+  )
+
+# TEMP local install of exes
+install(TARGETS inc-expand
+  EXPORT FNALCoreExports
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT Runtime
+  )
+
 # TEMP local install of headers
 install(FILES ${cetlib_PUBLIC_HDRS}
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/cetlib
