@@ -36,7 +36,8 @@ add_library(FNALCore SHARED
 add_library(cpp0x ALIAS FNALCore)
 add_library(cetlib ALIAS FNALCore)
 add_library(fhiclcpp ALIAS FNALCore)
-add_library(messagefacility ALIAS FNALCore)
+add_library(MF_MessageLogger ALIAS FNALCore)
+add_library(MF_Utilities ALIAS FNALCore)
 
 
 # - Set core properties
@@ -100,6 +101,7 @@ if(FNALCore_ENABLE_TESTING)
   add_subdirectory(cpp0x/test)
   include(cetlib_module_tests.cmake)
   add_subdirectory(fhiclcpp/test)
+  add_subdirectory(messagefacility/test)
 endif()
 
 #-----------------------------------------------------------------------
