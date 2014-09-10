@@ -2,6 +2,19 @@
 # Project setup
 # Require 2.8.12 for INTERFACE_ support and target ALIAS
 cmake_minimum_required(VERSION 2.8.12)
+
+# - Policies - set all here as may influence project() call
+# Always id Clang as Clang, defer use of AppleClang id
+if(POLICY CMP0025)
+  cmake_policy(SET CMP0025 OLD)
+endif()
+
+# Always use rpath on Mac, as it's supported in out min version, and
+# CMake 3 and higher prefer it
+if(POLICY CMP0042)
+  cmake_policy(SET CMP0042 NEW)
+endif()
+
 project(FNALCore)
 
 #-----------------------------------------------------------------------
