@@ -60,6 +60,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${BASE_OUTPUT_DIRECTORY}/${CMAKE_INSTALL_BIN
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${BASE_OUTPUT_DIRECTORY}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${BASE_OUTPUT_DIRECTORY}/${CMAKE_INSTALL_LIBDIR}")
 
+# Translate to cetbuildtool-speak for tests...
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+set(LIBRARY_OUTPUT_PATH "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+
 # - C++11 Check/Configuration
 # To be added: list of C++11 features which *must* be present.
 include(CheckCXX11Features)
@@ -105,6 +109,11 @@ if(FNALCore_ENABLE_TESTING)
   find_package(Boost ${BOOST_VERSION} REQUIRED unit_test_framework)
   include(CetTest)
   cet_test_env("PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}:$ENV{PATH}")
+  if(APPLE)
+    cet_test_env("DYLD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+  elseif(UNIX)
+    cet_test_env("LD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+  endif()
 endif()
 
 #-----------------------------------------------------------------------
