@@ -140,6 +140,12 @@
 #
 ########################################################################
 
+# - Include once to avoid nuking environment...
+if(__CET_TEST_ISLOADED__)
+  return()
+endif()
+set(__CET_TEST_ISLOADED__ TRUE)
+
 # Need argument parser.
 include(CMakeParseArguments)
 # May need to escape a string to avoid misinterpretation as regex

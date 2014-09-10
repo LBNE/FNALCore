@@ -40,7 +40,25 @@ include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 
 # - Local Customs
+# - Cetbuildtools bypass/simplifications
 include(CetDummy)
+
+# - Build product locations
+# The variables CMAKE_{RUNTIME,LIBRARY,ARCHIVE}_OUTPUT_DIRECTORY can
+# be used to specify where executables, dynamic and static libraries
+# are output. They initialize the {RUNTIME,LIBRARY,ARCHIVE}_OUTPUT_DIRECTORY
+# properties of targets added via add_{executable,target}, so can
+# targets can override if need be.
+#
+# - Assume for now that GNUInstallDirs provides relative (to
+#   CMAKE_INSTALL_PREFIX) paths, and reflect this layout in the
+#   output directories. This should be o.k. even on DLL platforms
+#   as CMake should output these to the RUNTIME directory.
+#
+set(BASE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/BuildProducts")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${BASE_OUTPUT_DIRECTORY}/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${BASE_OUTPUT_DIRECTORY}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${BASE_OUTPUT_DIRECTORY}/${CMAKE_INSTALL_LIBDIR}")
 
 # - C++11 Check/Configuration
 # To be added: list of C++11 features which *must* be present.
@@ -86,6 +104,7 @@ if(FNALCore_ENABLE_TESTING)
   set(BOOST_NO_SYSTEM_PATHS ON)
   find_package(Boost ${BOOST_VERSION} REQUIRED unit_test_framework)
   include(CetTest)
+  cet_test_env("PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}:$ENV{PATH}")
 endif()
 
 #-----------------------------------------------------------------------
