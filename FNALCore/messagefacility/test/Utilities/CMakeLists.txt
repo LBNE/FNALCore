@@ -36,7 +36,7 @@ endforeach ( test ${TEST_LIST} ${ALSO_BUILD} )
 # Run tests:
 
 foreach ( test ${TEST_LIST} ${ALSO_RUN} )
-  add_test ( ${test} ${EXECUTABLE_OUTPUT_PATH}/${test} )
+  add_test (NAME ${test} COMMAND ${test} )
 endforeach ( test ${TEST_LIST} )
 
 # Non-standard tests:
