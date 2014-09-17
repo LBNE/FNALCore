@@ -211,7 +211,7 @@ requires some connection back to the upstream FNAL repositories to
 - Make updates easier
 - Retain upstream commits so that patches to the C++ code can be
   submitted upstream.
-- Retain upstream commits so that future adoption of FNALCore
+- Retain upstream commits so that any future adoption of FNALCore
   holds prior history of files.
 
 Git offers several options for this, the most common being submodules
@@ -234,6 +234,8 @@ is now stored via subtrees
          +- test/
 ```
 
+This is chosen to help isolate the individual subtrees and for that reason
+only. It is not neccessarily the cleanest arrangement of code.
 The subtrees themselves use the master branches of the
 [LBNE mirrors](https://github.com/LBNE) of
 [cpp0x](https://github.com/LBNE/fnal-cpp0x),
@@ -295,7 +297,8 @@ Pushing Local Subtree Changes Upstream
 --------------------------------------
 We may make local modifications to files under the subtrees, for example
 patches for Mac. To push these upstream, you need to have write permission
-to the upstream repo. If you do, then  but if you do, then all that needs to be done is
+to the upstream repo. If you do, then all that needs to be done to push
+all local commits back to the subtree master is:
 
 ```sh
 $ git subtree push --prefix=FNALCore/cpp0x cpp0x-upstream master
@@ -304,6 +307,6 @@ $ git subtree push --prefix=FNALCore/cpp0x cpp0x-upstream master
 and similarly for the other subtrees. It's this separation of the trees
 that means you must keep commits "atomic" to the subtree. For example,
 if you patch something in `FNALCore/cetlib` which also affects something
-  in `FNALCore/fhicl-cpp`, then perform two separate commits, one for each
-  tree.
+in `FNALCore/fhicl-cpp`, then perform two separate commits, one for each
+tree.
 
