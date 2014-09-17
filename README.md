@@ -45,25 +45,27 @@ Installation
 ============
 Requirements
 ------------
-- CMake 2.8.12 or above
-- C++0X/11 compliant compiler (NB, whilst the configuration will
-  perform most checks, it's not guaranteed that everything has been
-  checked)
+- [CMake](http://www.cmake.org) 2.8.12 or above
+- [C++0X/11](http://isocpp.org) compliant compiler
+  - The [CheckCXX11Features](https://github.com/drbenmorgan/CheckCXX11Features) package is used to check for known C++0X/11 features.
   - The `cpp0x` module provides minimal implementations of some
     C++11 features, but is not complete.
-  - Boost implementations are used in some cases.
+  - Boost implementations are used where neccessary.
   - Features that the compiler/standard library *must* provide include
     (not complete as yet):
     - `emplace` member functions of `std::` collections.
-- Boost 1.42 or higher, with filesystem, system, regex and thread libraries
-  compiled against C++11. If you want to run the unit tests, the Boost test
-  library is also needed. NB: the C++11 compatibility of the found
-  Boost is *not* checked, but an incompatible Boost should cause
-  the unit tests to fail. It should be noted that as a robust
-  ABI checks are tricky to implement, it is up to *you*, not the buildsystem,
-  to point to the right Boost.
-- SQLite3 3.7.15 or higher for fhiclcpp database support.
-- Doxygen 1.8 or higher for documentation.
+- [Boost](http://www.boost.org) 1.55 or higher, with `filesystem`,
+  `system`, `regex` and `thread` libraries compiled against C++11.
+  If you want to run FNALCore's unit tests, the Boost `unit_test` library
+  is also needed.
+  - NB: the C++11 compatibility of the found Boost is *not* checked, but
+    an ABI incompatible Boost should cause the unit tests to fail. It
+    should be noted that as a robust ABI checks are tricky to implement,
+    it is up to *you*, not the buildsystem, to point to the right Boost.
+- [SQLite3](http://www.sqlite.org) 3.8.5 or higher for database support
+  in `fhiclcpp`.
+- [Doxygen](http://www.doxygen.org) 1.8 or higher for building FNALCore's
+  documentation.
 
 How to Install
 --------------
@@ -139,7 +141,7 @@ find_package(FNALCore REQUIRED)
 ```
 
 to your CMake script. If you have installed FNALCore to a non standard
-location, you may need to set FNALCore_DIR or CMAKE_PREFIX_PATH.
+location, you may need to set `FNALCore_DIR` or `CMAKE_PREFIX_PATH`.
 
 To use the headers and link to the library, you can add
 
@@ -157,13 +159,14 @@ configuration is binary compatible (compiler version, C++ standard and
 library vendor). However, once FNALCore is found the CMake variables
 `FNALCore_CXX_COMPILER_ID`, `FNALCore_CXX_COMPILER_VERSION`,
 `FNALCore_CXX_STDLIB_ID` and `FNALCore_STDLIB_VERSION` are available
-for manual checks.
+for manual checks. CMake's new `COMPATIBLE_INTERFACE` properties
+may help here.
 
 FNALCore exposes Boost headers in its public API, and the include path
 to the required Boost will be automatically set. At present, this results
 in a non-relocatable path being encoded in the FNALCore support files.
-This can be resolved when FindBoost supports imported targets, or
-a wrapper can be written.
+This can be resolved when CMake's `FindBoost` module supports imported
+targets, or a wrapper can be written.
 
 Header Paths and Adapting Existing Code
 ---------------------------------------

@@ -109,9 +109,9 @@ set(FNALCore_BOOST_COMPONENTS
   thread
   program_options
   )
-find_package(Boost 1.42.0 REQUIRED ${FNALCore_BOOST_COMPONENTS})
+find_package(Boost 1.55.0 REQUIRED ${FNALCore_BOOST_COMPONENTS})
 
-find_package(SQLite3 3.7.15 REQUIRED)
+find_package(SQLite3 3.8.5 REQUIRED)
 
 #-----------------------------------------------------------------------
 # Testing
