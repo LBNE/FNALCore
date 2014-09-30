@@ -18,10 +18,13 @@
 #include "cpp0x/compiler_macros.h"
 
 //----------------------------------------------------------------------
+// Non-C++11 features, but required for workarounds
+#cmakedefine CPP0X_HAS_CMATH_FPCLASSIFICATION
+
+//----------------------------------------------------------------------
 // Definitions describing C++11 features supported by compiler/stdlib
 // Wrapped inside GCC's macros specification for C++0x support.
 // This *should* also be defined in Clang and Intel, but needs checking!
-
 #if defined __GXX_EXPERIMENTAL_CXX0X__
 #cmakedefine CPP0X_HAS_ALGORITHM_ALL_OF
 #cmakedefine CPP0X_HAS_ALGORITHM_ANY_OF
@@ -38,7 +41,6 @@
 #cmakedefine CPP0X_HAS_AUTO_RET_TYPE
 #cmakedefine CPP0X_HAS_CLASS_OVERRIDE
 #cmakedefine CPP0X_HAS_CMATH_C99
-#cmakedefine CPP0X_HAS_CMATH_FPCLASSIFICATION
 #cmakedefine CPP0X_HAS_CONSTEXPR_FUNCTIONS
 #cmakedefine CPP0X_HAS_CONSTEXPR_VARIABLES
 #cmakedefine CPP0X_HAS_CSTDINT_HDR
