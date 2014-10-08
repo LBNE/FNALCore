@@ -53,6 +53,7 @@ set(MessageService_HEADERS
   ${messagefacility_INCLUDE_DIR}/MessageService/ELsender.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELset.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELstatistics.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELsyslog.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.icc
   ${messagefacility_INCLUDE_DIR}/MessageService/ErrorLog.h
@@ -106,6 +107,7 @@ set(MessageFacility_SOURCES
   ${messagefacility_INCLUDE_DIR}/MessageService/ELoutput.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELrecv.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELstatistics.cc
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELsyslog.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ErrorLog.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/HardwiredDefaults.cc
