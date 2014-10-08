@@ -341,12 +341,6 @@ void
     clean_slate_configuration = false;                          // Change Log 22
   }
 
-  std::string ext(cet::shlib_prefix() + "MF_ExtModules" + cet::shlib_suffix());
-  void *hndl = dlopen(ext.c_str(), RTLD_NOW );
-  if(hndl == NULL) {
-    LogError("preconfiguration") << dlerror();
-  }
-
   configure_fwkJobReports();                                    // Change Log 16
   configure_ordinary_destinations();                            // Change Log 16
   configure_statistics();                                       // Change Log 16
