@@ -21,7 +21,7 @@ set(FNALCore_BOOST_COMPONENTS "@FNALCore_BOOST_COMPONENTS@")
 if(Boost_FOUND)
   # Check that at least the versions match
   if(NOT (FNALCore_BOOST_VERSION VERSION_EQUAL "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}"))
-    message(FATAL_ERROR "FNALCore: Already found Boost version "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}" does not match version required by FNALCore (${FNALCore_BOOST_VERSION})")
+    message(FATAL_ERROR "FNALCore: Boost found, but version \"${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}\" does not match version required by FNALCore (${FNALCore_BOOST_VERSION})")
   endif()
 endif()
 
