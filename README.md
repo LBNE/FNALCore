@@ -45,5 +45,18 @@ $ git pull
 $ git push origin localcdcvs:cdcvs/master
 ```
 
+The final command here pushes the changes to the `cdcvs/master` branch on
+the github remote that is used to store the pristine sources
 
+The github master branch itself is used to patch in changes that are needed
+to fix portability issues. However, it should in the first instance be
+merged with upstream changes so that these are ported across. To do this,
+after you have pulled in upstream changes, do:
+
+```sh
+$ git checkout master
+$ git merge localcdcvs
+... fix any conflicts, commit...
+$ git push origin master
+```
 
