@@ -3,6 +3,7 @@
 #  -------------------------------------------------------------------
 #
 
-# install files
+# !! Files built in ../MessageLogger/CMakeLists.txt !!
+
 install_headers()
-install_source( EXTRAS CMakeLists.txt )
+install_source()

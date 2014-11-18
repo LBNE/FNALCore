@@ -6,10 +6,10 @@
 
 #include "messagefacility/MessageService/MessageLoggerScribe.h"
 
+#include "cetlib/exempt_ptr.h"
 #include "cetlib/shlib_utils.h"
 #include "cetlib/container_algorithms.h"
-#include "cpp0x/algorithm"
-#include "cpp0x/string"
+
 #include "messagefacility/MessageLogger/ConfigurationHandshake.h"
 #include "messagefacility/MessageLogger/ErrorObj.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -25,17 +25,15 @@
 
 #include "boost/scoped_ptr.hpp"
 
+#include <algorithm>
 #include <cassert>
-#include <dlfcn.h> //dlopen
 #include <fstream>
 #include <iostream>
 #include <signal.h>
-
-using std::cerr;
+#include <string>
 
 namespace mf {
   namespace service {
-
 
     MessageLoggerScribe::MessageLoggerScribe(std::shared_ptr<ThreadQueue> queue)
   : admin_p   ( ELadministrator::instance() )
@@ -52,6 +50,7 @@ namespace mf {
   , purge_mode (false)                                            // changeLog 32
   , count (false)                                                 // changeLog 32
   , m_queue(queue)                                                // changeLog 36
+  , pluginFactory_()
     {
       admin_p->setContextSupplier(msg_context);
     }
@@ -113,8 +112,8 @@ namespace mf {
 
             if(count > 25)
               {
-                cerr << "MessageLogger will no longer be processing "
-                     << "messages due to errors (entering purge mode).\n";
+                std::cerr << "MessageLogger will no longer be processing "
+                          << "messages due to errors (entering purge mode).\n";
                 purge_mode = true;
               }
           }
@@ -314,12 +313,6 @@ namespace mf {
         LogWarning ("multiLogConfig")
           << "The message logger has been configured multiple times";
         clean_slate_configuration = false;                          // Change Log 22
-      }
-
-      std::string ext(cet::shlib_prefix() + "MF_ExtModules" + cet::shlib_suffix());
-      void *hndl = dlopen(ext.c_str(), RTLD_NOW );
-      if(hndl == NULL) {
-        LogError("preconfiguration") << dlerror();
       }
 
       configure_fwkJobReports();                                    // Change Log 16
@@ -787,19 +780,19 @@ namespace mf {
             {
               const bool append = dest_pset.get<bool>("append", false);
 
-              auto os_sp = 
+              auto os_sp =
                 std::make_shared<std::ofstream>
                 (
                  filename.c_str(),
                  append ? std::ios_base::app : std::ios_base::trunc
                  );
-              
+
               ostream_ps.push_back(os_sp);
               os_p = os_sp.get();
               dest_ctrl = admin_p->attach( ELoutput(*os_sp) );
               stream_ps[filename] = os_sp.get();
             }
-          else if ( dest_type == "syslog" ) 
+          else if ( dest_type == "syslog" )
             {
               auto oss_sp = std::make_shared<std::ostringstream>();
               ostream_ps.push_back(oss_sp);
@@ -807,23 +800,15 @@ namespace mf {
               dest_ctrl = admin_p->attach( ELsyslog( *oss_sp ) );
               stream_ps["syslog"] = oss_sp.get();
             }
-          else
+          else // assume all other destinations are plugins
             {
-              // destinations from Extension package
-              // boost::scoped_ptr<ELdestination> dest_sp(
-              //                                          ELdestinationFactory::createInstance(
-              //                                                                               dest_type, psetname, dest_pset) );
+              auto const libspec   = dest_type;
+              dest_ctrl            = admin_p->attach( makePlugin_(libspec) );
 
-              // if(dest_sp.get() == 0)
-              //   {
-              //     LogError("ExtensionNotFound")
-              //       << "The destination of type \""
-              //       << dest_type
-              //       << "\" does not exist!";
-              //     continue;
-              //   }
-
-              // dest_ctrl = admin_p->attach( std::make_shared<ELdestination>( *dest_sp ) );
+              auto oss_sp          = std::make_shared<std::ostringstream>();
+              os_p = oss_sp.get();
+              ostream_ps.push_back(oss_sp);
+              stream_ps[dest_type] = oss_sp.get();
             }
 
           // now configure this destination:
@@ -1087,7 +1072,29 @@ namespace mf {
       }
     }
 
-    //ErrorLog * MessageLoggerScribe::static_errorlog_p;
+    std::unique_ptr<ELdestination>
+    MessageLoggerScribe::
+    makePlugin_(std::string const& libspec)
+    {
+      std::unique_ptr<ELdestination> result;
+      try {
+        auto const pluginType = pluginFactory_.pluginType(libspec);
+        if (pluginType == cet::PluginTypeDeducer<ELdestination>::value) {
+          result = pluginFactory_.makePlugin<std::unique_ptr<ELdestination> >(libspec);
+        } else {
+          throw Exception(errors::Configuration, "MessageLoggerScribe: ")
+            << "unrecognized plugin type "
+            << pluginType
+            << "for plugin "
+            << libspec
+            << ".\n";
+        }
+      } catch (cet::exception & e) {
+        throw Exception(errors::Configuration, "MessageLoggerScribe: ", e)
+          << "Exception caught while processing plugin spec.\n";
+      }
+      return result;
+    } //
 
 
   } // end of namespace service

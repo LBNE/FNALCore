@@ -4,48 +4,25 @@
 #
 # ======================================================================
 
+include( BasicPlugin )
+
+basic_plugin( ELpluginTest plugin
+              MF_MessageLogger
+              NO_INSTALL )
+
 CONFIGURE_FILE (
     ${CMAKE_CURRENT_SOURCE_DIR}/MessageFacilityTest.cfg
     ${CMAKE_CURRENT_BINARY_DIR}/MessageFacility.cfg
     COPYONLY
     )
 
-# ----------------------------------------------------------------------
-# Identify tests:
+cet_test_env(CLEAR "FHICL_FILE_PATH=${CMAKE_CURRENT_SOURCE_DIR}")
 
-set ( TEST_LIST
-      MFTest
-      MFTimingService
-#      mfexample
-    )
+cet_test( MFTest 
+          LIBRARIES
+          MF_MessageLogger )
 
-set ( ALSO_BUILD )
+cet_test( MFTimingService 
+          LIBRARIES
+          MF_MessageLogger )
 
-set ( ALSO_RUN )
-
-link_libraries( MF_MessageLogger )
-
-# ----------------------------------------------------------------------
-# Build most tests:
-
-foreach ( test ${TEST_LIST} ${ALSO_BUILD} )
-  add_executable ( ${test} ${test}.cc )
-endforeach ( test ${TEST_LIST} ${ALSO_BUILD} )
-
-# ----------------------------------------------------------------------
-# Build tests with special requirements:
-
-#add_executable( sha1_test_performance sha1_test_performance.cc sha1.cpp )
-#target_link_libraries( sha1_test_performance cetlib )
-
-# ----------------------------------------------------------------------
-# Run tests:
-
-# FIXME MFTest and mfexample need working new-style configurations.
-foreach ( test ${TEST_LIST} ${ALSO_RUN} )
-  add_test ( ${test} ${EXECUTABLE_OUTPUT_PATH}/${test} )
-endforeach ( test ${TEST_LIST} )
-
-# Non-standard tests:
-
-# ======================================================================
