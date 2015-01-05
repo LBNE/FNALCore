@@ -48,12 +48,10 @@ set(MessageService_HEADERS
   ${messagefacility_INCLUDE_DIR}/MessageService/ELerrorList.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELfwkJobReport.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELlimitsTable.h
-  ${messagefacility_INCLUDE_DIR}/MessageService/ELoutput.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELrecv.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELsender.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELset.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELstatistics.h
-  ${messagefacility_INCLUDE_DIR}/MessageService/ELsyslog.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.icc
   ${messagefacility_INCLUDE_DIR}/MessageService/ErrorLog.h
@@ -64,7 +62,6 @@ set(MessageService_HEADERS
   ${messagefacility_INCLUDE_DIR}/MessageService/MessageLoggerScribe.h
   ${messagefacility_INCLUDE_DIR}/MessageService/MessageServicePresence.h
   ${messagefacility_INCLUDE_DIR}/MessageService/MsgContext.h
-  ${messagefacility_INCLUDE_DIR}/MessageService/NamedDestination.h
   ${messagefacility_INCLUDE_DIR}/MessageService/Presence.h
   ${messagefacility_INCLUDE_DIR}/MessageService/SingleThreadMSPresence.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ThreadQueue.h
@@ -72,7 +69,6 @@ set(MessageService_HEADERS
   )
 set(MessageLogger_HEADERS
   ${messagefacility_INCLUDE_DIR}/MessageLogger/AbstractMLscribe.h
-  ${messagefacility_INCLUDE_DIR}/MessageLogger/classes.h
   ${messagefacility_INCLUDE_DIR}/MessageLogger/ConfigurationHandshake.h
   ${messagefacility_INCLUDE_DIR}/MessageLogger/ELextendedID.h
   ${messagefacility_INCLUDE_DIR}/MessageLogger/ELlist.h
@@ -104,10 +100,8 @@ set(MessageFacility_SOURCES
   ${messagefacility_INCLUDE_DIR}/MessageService/ELerrorList.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELfwkJobReport.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELlimitsTable.cc
-  ${messagefacility_INCLUDE_DIR}/MessageService/ELoutput.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELrecv.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELstatistics.cc
-  ${messagefacility_INCLUDE_DIR}/MessageService/ELsyslog.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ErrorLog.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/HardwiredDefaults.cc
