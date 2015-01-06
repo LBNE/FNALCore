@@ -14,12 +14,12 @@ add_subdirectory(${cetlib_TEST_DIR})
 # - Customizations
 # - Handbuilt test for LibraryManager
 add_library(test_fakePlugin SHARED ${cetlib_TEST_DIR}/moduleType.cc)
-add_executable(LibraryManager_t ${cetlib_TEST_DIR}/LibraryManager_t.cc)
-set_target_properties(LibraryManager_t
+add_executable(LibraryManager_t2 ${cetlib_TEST_DIR}/LibraryManager_t.cc)
+set_target_properties(LibraryManager_t2
   PROPERTIES
    COMPILE_DEFINITIONS "BOOST_TEST_MAIN;BOOST_TEST_DYN_LINK"
    )
-target_link_libraries(LibraryManager_t ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} FNALCore)
+target_link_libraries(LibraryManager_t2 ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} FNALCore)
 
 # - Plugin test
 # This will fail because unlike the above, it doesn't set LD_LIBRARY_PATH
