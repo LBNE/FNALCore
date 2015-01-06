@@ -4,32 +4,20 @@
 //
 // ----------------------------------------------------------------------
 
-#include "messagefacility/MessageService/MessageLoggerScribe.h"
-
-#include "cetlib/exempt_ptr.h"
-#include "cetlib/shlib_utils.h"
-#include "cetlib/container_algorithms.h"
-
 #include "messagefacility/MessageLogger/ConfigurationHandshake.h"
 #include "messagefacility/MessageLogger/ErrorObj.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "messagefacility/MessageLogger/MessageLoggerQ.h"
 #include "messagefacility/MessageService/ELadministrator.h"
 #include "messagefacility/MessageService/ELfwkJobReport.h"
 #include "messagefacility/MessageService/ELostreamOutput.h"
 #include "messagefacility/MessageService/ELstatistics.h"
 #include "messagefacility/MessageService/ErrorLog.h"
+#include "messagefacility/MessageService/MessageLoggerScribe.h"
 #include "messagefacility/MessageService/ThreadQueue.h"
 #include "messagefacility/Utilities/exception.h"
 
-#include "boost/scoped_ptr.hpp"
-
-#include <algorithm>
 #include <cassert>
-#include <fstream>
 #include <iostream>
-#include <signal.h>
-#include <string>
 
 namespace {
 
@@ -43,7 +31,7 @@ namespace mf {
 
     MessageLoggerScribe::MessageLoggerScribe(std::shared_ptr<ThreadQueue> queue)
       : admin_p   ( ELadministrator::instance() )
-      , early_dest( admin_p->attach( std::make_unique<ELostreamOutput>( std::cerr, false)) )
+      , early_dest( admin_p->attach( "cerr_early", std::make_unique<ELostreamOutput>( std::cerr, false)) )
       , errorlog_p( new ErrorLog() )
       , job_pset_p( )
       , jobReportOption( )
@@ -313,7 +301,7 @@ namespace mf {
         }
       }
 
-      if ( !destIdControlMap.empty() ) {
+      if ( admin_p->sinks().size() > 1 ) {
         LogWarning ("multiLogConfig")
           << "The message logger has been configured multiple times";
         clean_slate_configuration = false;
@@ -555,7 +543,7 @@ namespace mf {
           }
 
           const std::string outputId = createId( existing_ids, "file", actual_filename );
-          const bool   duplicateDest = duplicateDestination( outputId, FWKJOBREPORT, throw_on_clean_slate );
+          const bool   duplicateDest = duplicateDestination( outputId, ELdestConfig::FWKJOBREPORT, throw_on_clean_slate );
 
           // use already-specified configuration if destination exists
           if ( duplicateDest ) continue;
@@ -563,8 +551,8 @@ namespace mf {
           jobReportExists = true;
           if ( actual_filename == jobReportOption ) jobReportOption = empty_String;
 
-          ELdestControl dest_ctrl = admin_p->attach( std::make_unique<ELfwkJobReport>( actual_filename ) );
-          destIdControlMap.emplace( outputId, dest_ctrl );
+          ELdestControl dest_ctrl = admin_p->attach( outputId,
+                                                     std::make_unique<ELfwkJobReport>( actual_filename ) );
 
           // now configure this destination:
           configure_dest(dest_ctrl, psetname, fjr_pset);
@@ -582,13 +570,12 @@ namespace mf {
 
       std::set<std::string> tmpIdSet;
       const std::string outputId = createId( tmpIdSet, "file", actual_filename );
-      const bool   duplicateDest = duplicateDestination( outputId, FWKJOBREPORT, no_throw_on_clean_slate );
+      const bool   duplicateDest = duplicateDestination( outputId, ELdestConfig::FWKJOBREPORT, no_throw_on_clean_slate );
 
       // use already-specified configuration if destination exists
       if ( duplicateDest ) return;
 
-      ELdestControl dest_ctrl = admin_p->attach( std::make_unique<ELfwkJobReport>( actual_filename ) );
-      destIdControlMap.emplace( outputId, dest_ctrl );
+      ELdestControl dest_ctrl = admin_p->attach( outputId, std::make_unique<ELfwkJobReport>( actual_filename ) );
 
       // now configure this destination, in the jobreport default manner:
       configure_default_fwkJobReport (dest_ctrl);
@@ -599,13 +586,14 @@ namespace mf {
     void MessageLoggerScribe::configure_destinations()
     {
       // grab list of destinations:
-      PSet dests = job_pset_p->get<fhicl::ParameterSet>("destinations");
+      PSet dests_pset     = job_pset_p->get<fhicl::ParameterSet>("destinations",fhicl::ParameterSet());
+      PSet origDests_pset = dests_pset;
 
-      const vString ordinaryDestinations   = fetch_ordinary_destinations  ( dests );
-      make_destinations( dests, ordinaryDestinations  , ORDINARY  , no_throw_on_clean_slate );
+      const vString ordinaryDestinations   = fetch_ordinary_destinations  ( dests_pset );
+      make_destinations( dests_pset, ordinaryDestinations  , ELdestConfig::ORDINARY  , no_throw_on_clean_slate );
 
-      const vString statisticsDestinations = fetch_statistics_destinations( dests );
-      make_destinations( dests, statisticsDestinations, STATISTICS, no_throw_on_clean_slate );
+      const vString statisticsDestinations = fetch_statistics_destinations( origDests_pset );
+      make_destinations( origDests_pset, statisticsDestinations, ELdestConfig::STATISTICS, no_throw_on_clean_slate );
 
     }
 
@@ -614,7 +602,7 @@ namespace mf {
     MessageLoggerScribe::
     make_destinations( const fhicl::ParameterSet& dests,
                        const std::vector<std::string>& dest_list,
-                       const config_type configuration,
+                       const ELdestConfig::dest_config configuration,
                        const bool should_throw ){
 
       std::set<std::string> ids;
@@ -629,10 +617,12 @@ namespace mf {
         if (is_placeholder) continue;
 
         // grab the destination type and filename
-        const String dest_type = dest_pset.get<std::string>("type");
-        checkType( dest_type, configuration );
+        const String dest_type = dest_pset.get<std::string>("type","file");
+        ELdestConfig::checkType( dest_type, configuration );
 
-        const std::string outputId = createId( ids, dest_type, std::string(), dest_pset );
+        const bool throw_on_duplicate_id = configuration == ELdestConfig::STATISTICS ? true : false;
+        const std::string outputId = createId( ids, dest_type, psetname, dest_pset, throw_on_duplicate_id );
+
         const bool   duplicateDest = duplicateDestination( outputId,
                                                            configuration,
                                                            should_throw );
@@ -643,24 +633,23 @@ namespace mf {
         const std::string libspec = dest_type;
 
         auto& plugin_factory =
-          configuration == STATISTICS ?
+          configuration == ELdestConfig::STATISTICS ?
           pluginStatsFactory :
           pluginFactory;
 
         // attach the current destination, keeping a control handle to it:
-        ELdestControl dest_ctrl = admin_p->attach( makePlugin_( plugin_factory,
+        ELdestControl dest_ctrl = admin_p->attach( outputId,
+                                                   makePlugin_( plugin_factory,
                                                                 libspec,
                                                                 psetname,
                                                                 dest_pset )
                                                    );
 
-        destIdControlMap.emplace( outputId, dest_ctrl );
-
         configure_dest(dest_ctrl, psetname, dest_pset);
 
         // Suppress the desire to do an extra termination summary just because
         // of end-of-job info message for statistics jobs
-        if ( configuration == STATISTICS ) dest_ctrl.noTerminationSummary() ;
+        if ( configuration == ELdestConfig::STATISTICS ) dest_ctrl.noTerminationSummary() ;
 
       }
 
@@ -709,25 +698,30 @@ namespace mf {
     void
     MessageLoggerScribe::triggerStatisticsSummaries() {
 
-      for ( auto idControlPair : destIdControlMap ) {
-        auto& destControl = idControlPair.second;
+      for ( auto& idDestPair : admin_p->sinks() ) {
+
+        ELdestControl destControl;
+        if ( !admin_p->getELdestControl( idDestPair.first, destControl ) ) continue;
+
         destControl.summary();
         if ( destControl.resetStats() ) destControl.wipe();
+
       }
 
     }
 
     //=============================================================================
+    // Currently not supported ... specify empty implementation
     void
     MessageLoggerScribe::
-    triggerFJRmessageSummary(std::map<std::string, double> & sm)
-    {
-      if (statisticsDestControls.empty()) {
-        sm["NoStatisticsDestinationsConfigured"] = 0.0;
-      } else {
-        statisticsDestControls[0].summaryForJobReport(sm);
-      }
-    }
+    triggerFJRmessageSummary(std::map<std::string, double>&){}
+    // {
+    //   if (statisticsDestControls.empty()) {
+    //     sm["NoStatisticsDestinationsConfigured"] = 0.0;
+    //   } else {
+    //     statisticsDestControls[0].summaryForJobReport(sm);
+    //   }
+    // }
 
     //=============================================================================
     std::vector<std::string>
@@ -746,12 +740,10 @@ namespace mf {
         destinations = messageLoggerDefaults.destinations;
 
         for ( const auto& dest : destinations ) {
-
           fhicl::ParameterSet tmp;
-          tmp.put<std::string>( "type"    , "file"     );
-          tmp.put<std::string>( "filename", "cerr.log" );
+          tmp.put<std::string>("type"    ,"file");
+          tmp.put<std::string>("filename",messageLoggerDefaults.output(dest) );
           dests.put<fhicl::ParameterSet>( dest, tmp );
-
         }
       }
 
@@ -779,36 +771,14 @@ namespace mf {
         statsDests = messageLoggerDefaults.statistics;
 
         for ( const auto& dest : statsDests ) {
-
           fhicl::ParameterSet tmp;
-          tmp.put<std::string>( "type"    , "file"           );
-          tmp.put<std::string>( "filename", "cerr_stats.log" );
+          tmp.put<std::string>("type"    ,"file");
+          tmp.put<std::string>("filename",messageLoggerDefaults.output(dest) );
           dests.put<fhicl::ParameterSet>( dest, tmp );
-
         }
       }
 
       return statsDests;
-
-    }
-
-    //=============================================================================
-    void
-    MessageLoggerScribe::
-    checkType( const std::string& type,
-               const config_type configuration ) {
-
-      if ( configuration != STATISTICS ) return;
-
-      // Check for ostream-supported types for statistics
-      if ( !cet::search_all( std::set<std::string>{"cout","cerr","file"}, type ) ) {
-
-        throw mf::Exception ( mf::errors::Configuration )
-          <<"\n"
-          <<"Unsupported type [ " << type << " ] chosen for statistics printout.\n"
-          <<"Must choose ostream type: \"cout\", \"cerr\", or \"file\""
-          <<"\n";
-      }
 
     }
 
@@ -818,42 +788,30 @@ namespace mf {
     createId( std::set<std::string>& existing_ids,
               const std::string& type,
               const std::string& file_name,
-              const fhicl::ParameterSet& pset ) {
+              const fhicl::ParameterSet& pset,
+              const bool should_throw ) {
 
       std::string output_id;
       if ( type == "cout" || type == "cerr" || type == "syslog" ) {
         output_id = type;
       }
       else {
-        //
-        // 'file_name' is empty for ordinary/statistics destinations
-        //
-        //   - the FHiCL parameter 'filename' must have an associated
-        //     value for non-cout/cerr/syslog destinations
-        //
-        const std::string filename = file_name.empty() ? pset.get<std::string>("filename") : file_name;
-
-        if ( type == "file" ) {
-          output_id = filename;
-        }
-        else {
-          output_id = type+":"+filename;
-        }
-
+        output_id = type+":"+pset.get<std::string>("filename",file_name);
       }
 
       // Emplace and check that output_id doesn't already exist
       if ( !existing_ids.emplace( output_id ).second ) {
         //
-        // Current usage case is to NOT throw.  So the output_id will
-        // be returned and duplicateDestination() check will emit a
-        // warning message that a duplicate destination is being used.
-        //
-        // throw mf::Exception( mf::errors::Configuration )
-        //   << "\n"
-        //   << " Output identifier: \"" << output_id << "\""
-        //   << " already specified within ordinary/statistics/fwkJobReport block in FHiCL file"
-        //   << "\n";
+        // Current usage case is to NOT throw for ordinary
+        // destinations, but to throw for statistics destinations.
+
+        if ( should_throw ) {
+          throw mf::Exception( mf::errors::Configuration )
+            << "\n"
+            << " Output identifier: \"" << output_id << "\""
+            << " already specified within ordinary/statistics/fwkJobReport block in FHiCL file"
+            << "\n";
+        }
       }
 
       return output_id;
@@ -864,17 +822,16 @@ namespace mf {
     bool
     MessageLoggerScribe::
     duplicateDestination( const std::string& output_id,
-                          const config_type configuration,
+                          const ELdestConfig::dest_config configuration,
                           const bool should_throw ) {
 
       std::string config_str;
-      if      ( configuration == FWKJOBREPORT ) config_str = "Framework Job Report";
-      else if ( configuration == ORDINARY     ) config_str = "MessageLogger";
-      else if ( configuration == STATISTICS   ) config_str = "MessageLogger Statistics";
+      if      ( configuration == ELdestConfig::FWKJOBREPORT ) config_str = "Framework Job Report";
+      else if ( configuration == ELdestConfig::ORDINARY     ) config_str = "MessageLogger";
+      else if ( configuration == ELdestConfig::STATISTICS   ) config_str = "MessageLogger Statistics";
 
-      auto destIdControlPair = destIdControlMap.find(output_id);
-
-      if ( destIdControlPair == destIdControlMap.end() ) return false;
+      ELdestControl destControl;
+      if ( !admin_p->getELdestControl( output_id, destControl ) ) return false;
 
       // For duplicate destinations
       const std::string hrule = "\n============================================================================ \n";
@@ -893,8 +850,8 @@ namespace mf {
       // ELdestination.userWantsStats_ flag needs to be set to
       // 'true' so that statistics are output.
 
-      if ( configuration == STATISTICS ) {
-        destIdControlPair->second.userWantsStats();
+      if ( configuration == ELdestConfig::STATISTICS ) {
+        destControl.userWantsStats();
         return true; // don't emit warning for statistics
       }
 
