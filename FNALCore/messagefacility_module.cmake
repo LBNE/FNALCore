@@ -48,6 +48,7 @@ set(MessageService_HEADERS
   ${messagefacility_INCLUDE_DIR}/MessageService/ELerrorList.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELfwkJobReport.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELlimitsTable.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELostreamOutput.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELrecv.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELsender.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ELset.h
@@ -62,6 +63,8 @@ set(MessageService_HEADERS
   ${messagefacility_INCLUDE_DIR}/MessageService/MessageLoggerScribe.h
   ${messagefacility_INCLUDE_DIR}/MessageService/MessageServicePresence.h
   ${messagefacility_INCLUDE_DIR}/MessageService/MsgContext.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/MsgFormatSettings.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/MsgStatistics.h
   ${messagefacility_INCLUDE_DIR}/MessageService/Presence.h
   ${messagefacility_INCLUDE_DIR}/MessageService/SingleThreadMSPresence.h
   ${messagefacility_INCLUDE_DIR}/MessageService/ThreadQueue.h
@@ -100,6 +103,7 @@ set(MessageFacility_SOURCES
   ${messagefacility_INCLUDE_DIR}/MessageService/ELerrorList.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELfwkJobReport.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELlimitsTable.cc
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELostreamOutput.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELrecv.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELstatistics.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ELtsErrorLog.cc
@@ -111,6 +115,8 @@ set(MessageFacility_SOURCES
   ${messagefacility_INCLUDE_DIR}/MessageService/MessageLoggerScribe.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/MessageServicePresence.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/MsgContext.cc
+  ${messagefacility_INCLUDE_DIR}/MessageService/MsgFormatSettings.cc
+  ${messagefacility_INCLUDE_DIR}/MessageService/MsgStatistics.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/Presence.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/SingleThreadMSPresence.cc
   ${messagefacility_INCLUDE_DIR}/MessageService/ThreadQueue.cc
