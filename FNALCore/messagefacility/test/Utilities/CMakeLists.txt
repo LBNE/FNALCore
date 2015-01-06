@@ -4,30 +4,13 @@
 #
 # ======================================================================
 
-# ----------------------------------------------------------------------
-# Identify tests:
-
-set ( TEST_LIST
-      Exception_t
-      ExceptionDerived_t
-      Simple_t
-    )
-
-set ( ALSO_BUILD )
-
-set ( ALSO_RUN )
-
 link_libraries( MF_Utilities )
 
-# ----------------------------------------------------------------------
-# Build most tests:
+cet_test_env(CLEAR "FHICL_FILE_PATH=${CMAKE_CURRENT_SOURCE_DIR}")
 
-foreach ( test ${TEST_LIST} ${ALSO_BUILD} )
-  add_executable ( ${test} ${test}.cpp )
-endforeach ( test ${TEST_LIST} ${ALSO_BUILD} )
-
-# ----------------------------------------------------------------------
-# Build tests with special requirements:
+cet_test( Exception_t )
+cet_test( ExceptionDerived_t )
+cet_test( Simple_t )
 
 #add_executable( sha1_test_performance sha1_test_performance.cc sha1.cpp )
 #target_link_libraries( sha1_test_performance cetlib )
@@ -42,3 +25,4 @@ endforeach ( test ${TEST_LIST} )
 # Non-standard tests:
 
 # ======================================================================
+
