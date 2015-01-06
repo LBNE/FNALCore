@@ -101,6 +101,10 @@ include(CheckCXXCompilerFlag)
 
 # For the "-std" family, can have 'c++1z' (C++17), 'c++14' (C++14),
 # 'c++1y' (C++14), 'c++11' (C++11), 'c++0x' (C++11)
+check_cxx_compiler_flag("-std=c++14" _HAS_CXX14_FLAG)
+if(NOT _HAS_CXX14_FLAG)
+  check_cxx_compiler_flag("-std=c++1y" _HAS_CXX1Y_FLAG)
+endif()
 
 check_cxx_compiler_flag("-std=c++11" _HAS_CXX11_FLAG)
 if(NOT _HAS_CXX11_FLAG)
@@ -129,6 +133,13 @@ if(_HAS_CXX11_FLAG)
   set(CXX11_COMPILER_FLAGS "-std=c++11")
 elseif(_HAS_CXX0X_FLAG)
   set(CXX11_COMPILER_FLAGS "-std=c++0x")
+endif()
+
+
+if(_HAS_CXX14_FLAG)
+  set(CXX11_COMPILER_FLAGS "-std=c++14")
+elseif(_HAS_CXX1Y_FLAG)
+  set(CXX11_COMPILER_FLAGS "-std=c++1y")
 endif()
 
 #-----------------------------------------------------------------------
