@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------
 
 #if defined __GNUC_PATCHLEVEL__
-  # define GCC_VERSION (10000 * __GNUC__ \
+  # define GCC_VERSION (100000 * __GNUC__ \
                        + 1000 * __GNUC_MINOR__ \
                        +        __GNUC_PATCHLEVEL__)
 
@@ -23,7 +23,7 @@
 #endif
 
 # define GCC_IS_AT_LEAST(major, minor, patch) \
-  (GCC_VERSION >= ((10000*(major)) + (1000*(minor)) + (patch)))
+  (GCC_VERSION >= ((100000*(major)) + (1000*(minor)) + (patch)))
 
 #endif /* cpp0x_compiler_macros_h */
 
