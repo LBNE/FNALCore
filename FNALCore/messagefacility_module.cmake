@@ -163,3 +163,11 @@ install(FILES ${MessageLogger_HEADERS}
   COMPONENT Development
   )
 
+# Oh, and this is just delightful - a testing application mixed in with
+# the library sources...
+add_executable(ELdestinationTester
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.cc
+  )
+target_link_libraries(ELdestinationTester FNALCore)
+
