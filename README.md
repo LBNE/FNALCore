@@ -22,7 +22,7 @@ github). This example uses the github repo as a starting point
 ```sh
 $ git clone git@github.com:LBNE/fnal-fhicl-cpp.git
 ...
-$ git remote add -f cdcvs http://cdcvs.fnal.gov/projects/fhicl-cpp
+$ git remote add -f cdcvs https://cdcvs.fnal.gov/projects/fhicl-cpp
 ...
 $ git branch -a
 * master
