@@ -16,7 +16,7 @@ set(MessageFacility_Utilities_HEADERS
   ${messagefacility_INCLUDE_DIR}/Utilities/DebugMacros.h
   ${messagefacility_INCLUDE_DIR}/Utilities/do_nothing_deleter.h
   ${messagefacility_INCLUDE_DIR}/Utilities/exception.h
-  ${messagefacility_INCLUDE_DIR}/Utilities/FormatTime.h
+  ${messagefacility_INCLUDE_DIR}/Utilities/formatTime.h
   ${messagefacility_INCLUDE_DIR}/Utilities/JobMode.h
   ${messagefacility_INCLUDE_DIR}/Utilities/SingleConsumerQ.h
   ${messagefacility_INCLUDE_DIR}/Utilities/tinystr.h
@@ -26,7 +26,7 @@ set(MessageFacility_Utilities_HEADERS
 set(MessageFacility_Utilities_SOURCES
   ${messagefacility_INCLUDE_DIR}/Utilities/DebugMacros.cc
   ${messagefacility_INCLUDE_DIR}/Utilities/exception.cc
-  ${messagefacility_INCLUDE_DIR}/Utilities/FormatTime.cc
+  ${messagefacility_INCLUDE_DIR}/Utilities/formatTime.cc
   ${messagefacility_INCLUDE_DIR}/Utilities/SingleConsumerQ.cc
   ${messagefacility_INCLUDE_DIR}/Utilities/tinyxml.cc
   ${messagefacility_INCLUDE_DIR}/Utilities/tinyxmlerror.cc
