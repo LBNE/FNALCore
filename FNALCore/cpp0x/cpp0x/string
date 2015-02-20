@@ -1,0 +1,183 @@
+#ifndef CPP0X_STRING
+#define CPP0X_STRING
+
+// ======================================================================
+//
+// string - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+#include <string>
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_STRING_NUMERIC_CONVERSIONS
+
+#if defined(CPP0X_HAS_STRING_NUMERIC_CONVERSIONS)
+
+#else
+  #include <cerrno>
+  #include <cstdio>
+  #include <cstdlib>
+  #include <limits>
+  #include <stdexcept>
+
+  namespace std  {
+    namespace _  {
+      class errno_saver
+      {
+      public:
+        errno_saver( ) : saved_errno(errno)  { errno = 0; }
+        ~errno_saver( )  { errno = saved_errno; }
+      private:
+        int  saved_errno;
+      };
+
+      class from_string
+      {
+      public:
+        from_string( string const & str, size_t * idx )
+        : b  ( str.c_str() )
+        , e  ( )
+        , es ( )
+        , idx( idx )
+        { }
+
+        char const *  begin( ) const  { return b; }
+        char **       end  ( )        { return &e; }
+
+        template< class Via >
+        Via
+          validate( Via const r, char const caller[] )
+        {
+          if( b == e && r == Via() )
+            throw invalid_argument(caller);
+          if( errno == ERANGE )
+            throw out_of_range(caller);
+          if( idx )
+            *idx = size_t(e - b);
+          return r;
+        }
+
+      private:
+        char const *   const  b;
+        char       *          e;
+        _::errno_saver const  es;
+        size_t     *   const  idx;
+      };  // from_string
+
+      template< class From >
+      string
+        to_string( From val, char const fmt[] )
+      {
+        static  constexpr size_t  delta = 25u;
+        for( int capacity = delta;  true;  capacity += delta )  {
+          string  s(capacity, char());
+          _::errno_saver const  es;
+          int  len = snprintf(&s[0], capacity, fmt, val);
+          if( len < capacity )
+            return s.resize(len), s;
+        }
+      }  // to_string()
+
+    }  // std::_
+
+    inline int
+      stoi( string const & str, size_t * idx = 0, int base = 10 )
+    {
+      _::from_string  s(str, idx);
+      long const      r = strtol(s.begin(), s.end(), base);
+      if( r < numeric_limits<int>::min() || numeric_limits<int>::max() < r )
+        errno = ERANGE;
+      return s.validate(r, "stoi");
+    }
+
+    inline long
+      stol( string const & str, size_t * idx = 0, int base = 10 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtol(s.begin(), s.end(), base)
+                       , "stol"
+                       );
+    }
+
+    inline unsigned long
+      stoul( string const & str, size_t * idx = 0, int base = 10 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtoul(s.begin(), s.end(), base)
+                       , "stoul"
+                       );
+    }
+
+    inline long long
+      stoll( string const & str, size_t * idx = 0, int base = 10 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtoll(s.begin(), s.end(), base)
+                       , "stoll"
+                       );
+    }
+
+    inline unsigned long long
+      stoull( string const & str, size_t * idx = 0, int base = 10 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtoull(s.begin(), s.end(), base)
+                       , "stoull"
+                       );
+    }
+
+    inline float
+      stof( string const & str, size_t * idx = 0 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtod(s.begin(), s.end())
+                       , "stof"
+                       );
+    }
+
+    inline double
+      stod( string const & str, size_t * idx = 0 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtod(s.begin(), s.end())
+                       , "stod"
+                       );
+    }
+
+    inline long double
+      stold( string const & str, size_t * idx = 0 )
+    {
+      _::from_string  s(str, idx);
+      return s.validate( strtold(s.begin(), s.end())
+                       , "stold"
+                       );
+    }
+
+    inline string  to_string( int                v )  { return _::to_string(v, "%d"  ); }
+    inline string  to_string( unsigned           v )  { return _::to_string(v, "%u"  ); }
+    inline string  to_string( long               v )  { return _::to_string(v, "%ld" ); }
+    inline string  to_string( unsigned long      v )  { return _::to_string(v, "%lu" ); }
+    inline string  to_string( long long          v )  { return _::to_string(v, "%lld"); }
+    inline string  to_string( unsigned long long v )  { return _::to_string(v, "%llu"); }
+    inline string  to_string( float              v )  { return _::to_string(v, "%f"  ); }
+    inline string  to_string( double             v )  { return _::to_string(v, "%f"  ); }
+    inline string  to_string( long double        v )  { return _::to_string(v, "%Lf" ); }
+
+  }  // namespace std
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

@@ -1,0 +1,270 @@
+#ifndef DETAIL_BERNOULLI_DISTRIBUTION
+#define DETAIL_BERNOULLI_DISTRIBUTION
+
+// ======================================================================
+//
+// bernoulli_distribution: per C++11 26.5.8.3.1 [rand.dist.bern.bernoulli]
+//
+// Produce truth values
+//
+// ======================================================================
+
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  class bernoulli_distribution;
+
+  template< class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>  &
+                , bernoulli_distribution const &
+                );
+
+  template< class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , bernoulli_distribution      &
+                );
+
+}
+
+// ======================================================================
+
+class std::bernoulli_distribution
+{
+private:
+
+  class param_t  // --------------------
+  {
+    friend  class bernoulli_distribution;
+
+  private:
+    double p_;
+
+    // helper functions:
+    template< class URNG >
+      bool  generate( URNG & ) const;
+      static range_error bad_p;
+
+  public:
+
+    // types:
+    typedef  bool                    result_type;
+    typedef  bernoulli_distribution  distribution_type;
+
+    // constructors:
+    explicit  param_t( double = 0.5 );
+
+    // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+    // property functions:
+    double  p( ) const  { return p_; }
+
+    // equality comparisons:
+    bool  operator == ( param_t const & ) const;
+    bool  operator != ( param_t const & ) const;
+
+    // statistics:
+    _::stats  expected( ) const;
+
+  };  // param_t  --------------------
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  bool     result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            bernoulli_distribution( );
+  explicit  bernoulli_distribution( double );
+  explicit  bernoulli_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  double       p    ( ) const  { return parm.p(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return p() == 1.0 ? true : false; }
+  result_type  max  ( ) const  { return p() == 0.0 ? false : true; }
+
+  // equality comparisons:
+  bool  operator == ( bernoulli_distribution const & ) const;
+  bool  operator != ( bernoulli_distribution const & ) const;
+
+};  // bernoulli_distribution
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+std::bernoulli_distribution::param_t::
+  param_t( double p )
+: p_( 0.0 <= p && p <= 1.0 ? p : throw bad_p )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+bool
+  std::bernoulli_distribution::param_t::
+  operator == ( param_t const & other ) const
+{
+  return p_ == other.p_;
+}
+
+bool
+  std::bernoulli_distribution::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+std::_::stats
+  std::bernoulli_distribution::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  p        = p_
+           ,  mean     = p
+           ,  variance = p * (1.0L - p)
+           ,  skew     = (1.0L - 2.0L * p) / sqrt(variance)
+           ,  kurtosis = ((6.0L * p - 6.0L) * p + 1.0L) / variance;
+
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class URNG >
+bool
+  std::bernoulli_distribution::param_t::
+  generate( URNG & u ) const
+{
+  constexpr size_t  nbits = numeric_limits<double>::digits;
+  return generate_canonical<double,nbits>(u) < p_;
+}
+
+std::range_error
+  std::bernoulli_distribution::param_t::
+  bad_p("std::bernoulli_distribution requires 0 <= p <= 1");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+  std::bernoulli_distribution::
+  bernoulli_distribution( )
+: parm( )
+{ }
+
+  std::bernoulli_distribution::
+  bernoulli_distribution( double p )
+: parm( p )
+{ }
+
+  std::bernoulli_distribution::
+  bernoulli_distribution( param_type const & p )
+: parm( p )
+{ }
+
+inline  void
+  std::bernoulli_distribution::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class URNG >
+inline  bool
+  std::bernoulli_distribution::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class URNG >
+inline  bool
+  std::bernoulli_distribution::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+inline  bool
+  std::bernoulli_distribution::
+  operator == ( bernoulli_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+bool
+  std::bernoulli_distribution::
+  operator != ( bernoulli_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>  & os
+                   , bernoulli_distribution const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+
+  return os << d.p();
+}
+
+template< class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , bernoulli_distribution      & d
+                   )
+{
+  typedef  bernoulli_distribution::param_t  param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  double p;
+  is >> p;
+  if( ! is.fail() )
+    d.param( param_t(p) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_BERNOULLI_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

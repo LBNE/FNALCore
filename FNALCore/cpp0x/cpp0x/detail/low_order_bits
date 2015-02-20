@@ -1,0 +1,59 @@
+#ifndef _LOW_ORDER_BITS
+#define _LOW_ORDER_BITS
+
+// ======================================================================
+//
+// low_order_bits: low-order bits for compile-time number of bits
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+#include "cpp0x/type_traits"
+#include <limits>
+
+namespace std {
+namespace _ {
+
+  template< class U, size_t nbits
+          , bool = nbits >= size_t(numeric_limits<U>::digits)
+          >
+    struct low_order_bits;
+
+  template< class U, size_t nbits >
+    struct low_order_bits<U,nbits,true >;  // saturated
+  template< class U, size_t nbits >
+    struct low_order_bits<U,nbits,false>;  // unsaturated
+
+}  // std::_
+}  // std::
+
+
+// ----------------------------------------------------------------------
+
+template< class UInt, std::size_t nbits >
+  struct std::_::low_order_bits<UInt,nbits,true>  // saturated
+{
+  STATIC_ASSERT( is_unsigned<UInt>::value
+               , "low_order_bits<> requires an unsigned type"
+               );
+
+  static  constexpr UInt  value = ~ UInt();
+
+};  // low_order_bits<,,true>
+
+template< class UInt, std::size_t nbits >
+  struct std::_::low_order_bits<UInt,nbits,false>  // unsaturated
+{
+  STATIC_ASSERT( is_unsigned<UInt>::value
+               , "low_order_bits<> requires an unsigned type"
+               );
+
+  static  constexpr UInt  value = (UInt(1u) << nbits) - 1u;
+
+};  // low_order_bits<,,false>
+
+// ======================================================================
+
+#endif  // _LOW_ORDER_BITS
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

@@ -1,0 +1,325 @@
+#ifndef DETAIL_BINOMIAL_DISTRIBUTION
+#define DETAIL_BINOMIAL_DISTRIBUTION
+
+// ======================================================================
+//
+// binomial_distribution: per C++11 26.5.8.3.2 [rand.dist.bern.bin]
+//
+// Produce integer values 0 <= i
+//
+// ======================================================================
+
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/is_nonnegative"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Int = int >
+    class binomial_distribution;
+
+  template< class Int, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>      &
+                , binomial_distribution<Int> const &
+                );
+
+  template< class Int, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , binomial_distribution<Int>  &
+                );
+
+}
+
+// ======================================================================
+
+template< class Int >
+  class std::binomial_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_integral<Int>::value
+               , "std::binomial_distribution<> requires an integral type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Int      result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            binomial_distribution( );
+  explicit  binomial_distribution( Int );
+            binomial_distribution( Int, double );
+  explicit  binomial_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  Int          t    ( ) const  { return parm.t(); }
+  double       p    ( ) const  { return parm.p(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return p() == 1.0 ? t() : Int(); }
+  result_type  max  ( ) const  { return p() == 0.0 ? Int() : t(); }
+
+  // equality comparisons:
+  bool  operator == ( binomial_distribution const & ) const;
+  bool  operator != ( binomial_distribution const & ) const;
+
+};  // binomial_distribution<>
+
+// ======================================================================
+
+template< class Int >
+  class std::binomial_distribution<Int>::param_t
+{
+  friend  class binomial_distribution<Int>;
+
+private:
+  Int     t_;
+  double  p_;
+
+  // helper functions:
+  template< class URNG >
+    Int  generate( URNG & ) const;
+  static range_error bad_t;
+  static range_error bad_p;
+
+public:
+
+  // types:
+  typedef  Int                         result_type;
+  typedef  binomial_distribution<Int>  distribution_type;
+
+  // constructors:
+  explicit  param_t( result_type = 1, double = 0.5 );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  result_type  t( ) const  { return t_; }
+  double       p( ) const  { return p_; }
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+  // statistics:
+  _::stats  expected( ) const;
+
+};  // binomial_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Int >
+  std::binomial_distribution<Int>::param_t::
+  param_t( result_type t, double p )
+: t_( std::_::is_nonnegative(t) ? t : throw bad_t )
+, p_( 0 <= p && p <= 1.0 ? p : throw bad_p )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+bool
+  std::binomial_distribution<Int>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return t_ == other.t_
+      && p_ == other.p_;
+}
+
+template< class Int >
+bool
+  std::binomial_distribution<Int>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+template< class Int >
+std::_::stats
+  std::binomial_distribution<Int>::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  t        = t_
+           ,  p        = p_
+           ,  mean     = t * p
+           ,  variance = mean * (1.0L - p)
+           ,  skew     = (1.0L - 2.0L * p) / sqrt(variance)
+           ,  kurtosis = (1.0L - 6.0L * p * (1.0L - p)) / variance;
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Int >
+template< class URNG >
+Int
+  std::binomial_distribution<Int>::param_t::
+  generate( URNG & u ) const
+{
+  constexpr size_t  nbits = numeric_limits<double>::digits;
+
+  Int  v = Int();
+  for( Int k = t_; k != 0; --k )
+    if( generate_canonical<double,nbits>(u) <= p_ )
+      ++v;
+  return v;
+}
+
+template< class Int >
+std::range_error
+  std::binomial_distribution<Int>::param_t::
+  bad_t("std::binomial_distribution<> requires 0 <= t");
+
+template< class Int >
+std::range_error
+  std::binomial_distribution<Int>::param_t::
+  bad_p("std::binomial_distribution<> requires 0 <= p <= 1");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Int >
+  std::binomial_distribution<Int>::
+  binomial_distribution( )
+: parm( )
+{ }
+
+template< class Int >
+  std::binomial_distribution<Int>::
+  binomial_distribution( result_type t )
+: parm( t )
+{ }
+
+template< class Int >
+  std::binomial_distribution<Int>::
+  binomial_distribution( result_type t, double p )
+: parm( t, p )
+{ }
+
+template< class Int >
+  std::binomial_distribution<Int>::
+  binomial_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Int >
+void
+  std::binomial_distribution<Int>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::binomial_distribution<Int>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::binomial_distribution<Int>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+inline  bool
+  std::binomial_distribution<Int>::
+  operator == ( binomial_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Int >
+bool
+  std::binomial_distribution<Int>::
+  operator != ( binomial_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Int, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>      & os
+                   , binomial_distribution<Int> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  return os << d.t() << sp << d.p();
+}
+
+template< class Int, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , binomial_distribution<Int>  & d
+                   )
+{
+  typedef  binomial_distribution<Int>    dist_t;
+  typedef  typename dist_t::result_type  result_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  result_t  t;
+  double    p;
+  is >> t >> p;
+  if( ! is.fail() )
+    d.param( param_t(t, p) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_BINOMIAL_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
