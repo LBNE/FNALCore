@@ -57,6 +57,8 @@
 #include "messagefacility/MessageLogger/ELseverityLevel.h"
 #include "messagefacility/MessageLogger/ErrorObj.h"
 
+#include "cetlib/exempt_ptr.h"
+
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -70,7 +72,7 @@ namespace service {
 // ----------------------------------------------------------------------
 
 class ELcontextSupplier;
-class ELdestination;
+  //class ELdestination;
 class ELadminDestroyer;
 class ErrorLog;
 class ELtsErrorLog;
@@ -116,22 +118,18 @@ public:
 
   // ---  furnish/recall destinations:
   //
-  //  ELdestControl attach( const ELdestination & sink );
-  template <typename DEST>
-  ELdestControl attach( DEST&& sink, 
-                        typename std::enable_if<std::is_base_of<ELdestination,DEST>::value>::type* = 0 ) {
-    sinks().emplace_back( new DEST( std::forward<DEST>(sink) ) );
-    return ELdestControl( sinks().back() );
-  }
 
   template <typename DEST>
-  ELdestControl attach( DEST&& sink, const ELstring & name,
+  ELdestControl attach( const std::string& outputId,
+                        std::unique_ptr<DEST>&& dest,
                         typename std::enable_if<std::is_base_of<ELdestination,DEST>::value>::type* = 0 ) {
-    sinks().emplace_back( new DEST( std::forward<DEST>(sink) ) );
-    attachedDestinations[name] = sinks().back();
-    return ELdestControl( sinks().back() );
+    auto emplacePair = attachedDestinations.emplace( outputId, std::move(dest) );
+    auto iterToIDdestPair = emplacePair.first;
+    const bool didEmplace = emplacePair.second;
+    return didEmplace ? ELdestControl( cet::exempt_ptr<ELdestination>( iterToIDdestPair->second.get() ) ) : ELdestControl();
   }
-  
+
+  const std::map<std::string,std::unique_ptr<ELdestination>> & sinks();
   bool getELdestControl ( const ELstring & name, ELdestControl & theControl );
 
   // ---  handle severity information:
@@ -166,7 +164,6 @@ protected:
   ELcontextSupplier           & context() const;
   const ELseverityLevel       & abortThreshold() const;
   const ELseverityLevel       &  exitThreshold() const;
-  std::list<std::unique_ptr<ELdestination>>  & sinks();
   const ELseverityLevel       & highSeverity() const;
   int                           severityCounts( int lev ) const;
 
@@ -210,7 +207,7 @@ private:
   ELstring                   application_;
   long                       pid_;
 
-  std::map < ELstring, std::unique_ptr<ELdestination> > attachedDestinations;
+  std::map <std::string,std::unique_ptr<ELdestination>> attachedDestinations;
 
 };  // ELadministrator
 

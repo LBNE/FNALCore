@@ -84,7 +84,7 @@
 #include "messagefacility/MessageService/ELadministrator.h"
 #include "messagefacility/MessageService/ELdestination.h"
 #include "messagefacility/MessageService/ELcontextSupplier.h"
-#include "messagefacility/MessageService/ELoutput.h"
+#include "messagefacility/MessageService/ELostreamOutput.h"
 
 #include "messagefacility/Utilities/exception.h"
 
@@ -174,7 +174,7 @@ bool ELadministrator::getELdestControl ( const ELstring & name,
                                          ELdestControl & theDestControl ) {
 
   if ( attachedDestinations.find(name) != attachedDestinations.end() ) {
-    theDestControl = ELdestControl ( attachedDestinations[name] );
+    theDestControl = ELdestControl ( cet::exempt_ptr<ELdestination>( attachedDestinations[name].get() ) );
     return true;
   } else {
     return false;
@@ -263,7 +263,7 @@ const ELseverityLevel & ELadministrator::exitThreshold() const  {
   return exitThreshold_;
 }
 
-std::list<std::unique_ptr<ELdestination>> & ELadministrator::sinks()  { return sinks_; }
+  const std::map<std::string,std::unique_ptr<ELdestination>>& ELadministrator::sinks()  { return attachedDestinations; }
 
 
 const ELseverityLevel & ELadministrator::highSeverity() const  {
@@ -325,27 +325,24 @@ void ELadministrator::finishMsg()  {
     std::cerr << "=:=:=: finshMsg() returns from editErrorObj( msg ) \n";
   #endif
 
-  bool mrt;
   #ifdef ELadTRACE_FINISH
     int destCounter = 0;
   #endif
   if ( sinks().begin() == sinks().end() )  {                   // $$ JV:1
     std::cerr << "\nERROR LOGGED WITHOUT DESTINATION!\n";
     std::cerr << "Attaching destination \"cerr\" to ELadministrator by default\n\n";
-    this->sinks().emplace_back( new ELoutput(cerr) );
+    attachedDestinations.emplace( "cerr", std::make_unique<ELostreamOutput>(cerr) );
   }
 
-  for ( auto& d : sinks() ) {
+  for ( const auto& d : sinks() ) {
 #ifdef ELadTRACE_FINISH
     std::cerr << "  =:=:=: log(msg) for a destination number "
               << ++destCounter << " called ... \n";
 #endif
-    mrt = d->log( msg );
+    d.second->log( msg );
 #ifdef ELadTRACE_FINISH
-    std::cerr << "  =:=:=: log(msg) for a destination returned " << mrt << "\n";
+    std::cerr << "  =:=:=: log(msg) for a destination successful \n";
 #endif
-    if ( mrt )
-      msg.setReactedTo(true);
   }
 
   msgIsActive = false;
@@ -371,14 +368,14 @@ void ELadministrator::clearMsg()  {
 
 void ELadministrator::setThresholds( const ELseverityLevel & sev )  {
 
-  for( auto & d : sinks() ) d->threshold = sev;
+  for( const auto & d : sinks() ) d.second->threshold = sev;
 
 }  // setThresholds()
 
 
 void ELadministrator::setLimits( const ELstring & id, int limit )  {
 
-  for( auto & d : sinks() ) d->limits.setLimit( id, limit );
+  for( const auto & d : sinks() ) d.second->stats.limits.setLimit( id, limit );
 
 }  // setLimits()
 
@@ -386,47 +383,47 @@ void ELadministrator::setLimits( const ELstring & id, int limit )  {
 void ELadministrator::setIntervals
                         ( const ELseverityLevel & sev, int interval )  {
 
-  for( auto & d : sinks() ) d->limits.setInterval( sev, interval );
+  for( const auto & d : sinks() ) d.second->stats.limits.setInterval( sev, interval );
 
 }  // setIntervals()
 
 void ELadministrator::setIntervals( const ELstring & id, int interval )  {
 
-  for( auto & d : sinks() ) d->limits.setInterval( id, interval );
+  for( const auto & d : sinks() ) d.second->stats.limits.setInterval( id, interval );
 
 }  // setIntervals()
 
 
 void ELadministrator::setLimits( const ELseverityLevel & sev, int limit )  {
 
-  for( auto & d : sinks() ) d->limits.setLimit( sev, limit );
+  for( const auto & d : sinks() ) d.second->stats.limits.setLimit( sev, limit );
 
 }  // setLimits()
 
 
 void ELadministrator::setTimespans( const ELstring & id, int seconds )  {
 
-  for ( auto & d : sinks() ) d->limits.setTimespan( id, seconds );
+  for ( const auto & d : sinks() ) d.second->stats.limits.setTimespan( id, seconds );
 
 }  // setTimespans()
 
 
 void ELadministrator::setTimespans( const ELseverityLevel & sev, int seconds )  {
 
-  for ( auto & d: sinks() ) d->limits.setTimespan( sev, seconds );
+  for ( const auto & d: sinks() ) d.second->stats.limits.setTimespan( sev, seconds );
 
 }  // setTimespans()
 
 
 void ELadministrator::wipe()  {
 
-  for ( auto & d : sinks() ) d->limits.wipe();
+  for ( const auto & d : sinks() ) d.second->stats.limits.wipe();
 
 }  // wipe()
 
 void ELadministrator::finish()  {
 
-  for ( auto & d : sinks() ) d->finish();
+  for ( const auto & d : sinks() ) d.second->finish();
 
 }  // wipe()
 
@@ -527,7 +524,7 @@ ELadministrator::ELadministrator()
     struct ifaddrs * ifa = NULL;
     void * tmpAddrPtr = NULL;
 
-    if( getifaddrs(&ifAddrStruct) ) 
+    if( getifaddrs(&ifAddrStruct) )
     {
       // failed to get addr struct
       hostaddr_ = "127.0.0.1";
@@ -555,8 +552,8 @@ ELadministrator::ELadministrator()
         }
 
         // find first non-local address
-        if( !hostaddr_.empty() 
-            && hostaddr_.compare("127.0.0.1") 
+        if( !hostaddr_.empty()
+            && hostaddr_.compare("127.0.0.1")
             && hostaddr_.compare("::1") )
           break;
       }
@@ -621,7 +618,7 @@ ELadministrator::~ELadministrator()  {
 
   finishMsg();
 
-  sinks().clear();
+  attachedDestinations.clear();
 
 }  // ~ELadministrator()
 
