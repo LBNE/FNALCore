@@ -1,0 +1,40 @@
+#ifndef CPP0X_CSTDDEF
+#define CPP0X_CSTDDEF
+
+// ======================================================================
+//
+// cstddef - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+// ----------------------------------------------------------------------
+// <cstddef>
+
+#include <cstddef>
+
+namespace std {
+  #if defined(CPP0X_HAS_CSTDDEF_NULLPTR_T)
+
+  #elif  defined(CPP0X_HAS_NULLPTR) \
+      && defined(CPP0X_HAS_DECLTYPE)
+    typedef decltype(nullptr) nullptr_t;
+
+  #else
+    typedef _::__nullptr_t nullptr_t;
+
+  #endif
+}
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

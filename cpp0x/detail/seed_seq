@@ -1,0 +1,206 @@
+#ifndef DETAIL_SEED_SEQ
+#define DETAIL_SEED_SEQ
+
+// ======================================================================
+//
+// seed_seq: per C++11 26.5.7.1 [rand.util.seedseq]
+//
+// ======================================================================
+
+#include "cpp0x/algorithm"
+#include "cpp0x/cstddef"
+#include "cpp0x/cstdint"
+#include "cpp0x/detail/low_order_bits"
+#include "cpp0x/iterator"
+#include "cpp0x/type_traits"
+#include <vector>
+//include "cpp0x/initializer_list"
+
+// ======================================================================
+
+namespace std {
+
+  class seed_seq;
+
+}
+
+// ======================================================================
+
+class std::seed_seq
+{
+private:
+  typedef  uint_least32_t  rep_t;
+
+  // no copy functions:
+  seed_seq( seed_seq const & );
+  void
+    operator = ( seed_seq const & );
+
+  vector<rep_t> v;
+
+  // helper functions:
+  static  size_t
+    T( size_t x )  { return x ^ (x >> 27u); }
+  template< class InIter >
+  void
+    copy32bits( InIter, InIter );
+
+public:
+
+  // types:
+  typedef  rep_t  result_type;
+
+  // constructors:
+  seed_seq();
+  //template< class T >
+  //  seed_seq( initializer_list<T> );
+  template< class InIter >
+    seed_seq( InIter, InIter );
+
+  // generating functions:
+  template< class RandIter >
+  void
+    generate( RandIter, RandIter );
+
+  // property functions:
+  size_t
+    size() const;
+  template< class OutputIterator >
+  void
+    param( OutputIterator ) const;
+
+};  // seed_seq
+
+// ----------------------------------------------------------------------
+// constructors:
+
+  std::seed_seq::seed_seq()
+: v( )
+{ }
+
+#if 0
+template< class T >
+  std::seed_seq::seed_seq( initializer_list<T> il )
+: v( il.begin(), il.end() )
+{
+  copy32bits(il.begin(), il.end());
+}
+#endif  // 0
+
+template< class InIter >
+  std::seed_seq::seed_seq( InIter b, InIter const e )
+: v( )
+{
+  copy32bits(b, e);
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class RandIter >
+void
+  std::seed_seq::generate( RandIter b, RandIter e )
+{
+  // useful types:
+  typedef  iterator_traits<RandIter>           traits_t;
+  typedef  typename traits_t::value_type       value_t;
+
+  // validate parameters:
+  STATIC_ASSERT( is_unsigned<value_t>::value
+               , "std::seed_seq<>::generate() requires an unsigned type"
+               );
+  STATIC_ASSERT( sizeof(value_t) >= 32u
+               , "std::seed_seq<>::generate() requires at least a 32-bit type"
+               );
+
+  if( b == e )
+    return;
+
+  size_t const  s   = v.size()
+             ,  n   = size_t(e - b)
+             ,  nm1 = n - 1u
+             ,  m   = max(s+1u, n)
+             ,  t   = (n >= 623u) ? 11u
+                    : (n >=  68u) ?  7u
+                    : (n >=  39u) ?  5u
+                    : (n >=   7u) ?  3u
+                    :               nm1 / 2u
+             ,  p   = (n - t) / 2u
+             ,  q   = p + t
+             ;
+
+  fill(b, e, 0x8b8b8b8bu);
+
+  size_t k = 0u;  {
+    rep_t  r = 1664525u * T( b[0] ^ b[p] ^ b[nm1] );
+    b[p] += r;
+    b[q] += (r += s);
+    b[0] =  r;
+  }
+  while( ++k != s )  {
+    size_t  k_mod_n   = k    % n
+         ,  kpp_mod_n = k+p  % n
+         ,  kpq_mod_n = k+q  % n
+         ,  km1_mod_n = k-1u % n
+         ;
+    rep_t  r = 1664525u * T(  b[k_mod_n] ^ b[kpp_mod_n] ^ b[km1_mod_n] );
+    b[kpp_mod_n] += r;
+    b[kpq_mod_n] += (r += k_mod_n + v[k-1u]);
+    b[k_mod_n  ] =  r;
+  }
+  while( ++k != m )  {
+    size_t  k_mod_n   = k    % n
+         ,  kpp_mod_n = k+p  % n
+         ,  kpq_mod_n = k+q  % n
+         ,  km1_mod_n = k-1u % n
+         ;
+    rep_t  r = 1664525u * T(  b[k_mod_n] ^ b[kpp_mod_n] ^ b[km1_mod_n] );
+    b[kpp_mod_n] += r;
+    b[kpq_mod_n] += (r += k_mod_n);
+    b[k_mod_n  ] =  r;
+  }
+  while( ++k != m+n )  {
+    size_t  k_mod_n   = k    % n
+         ,  kpp_mod_n = k+p  % n
+         ,  kpq_mod_n = k+q  % n
+         ,  km1_mod_n = k-1u % n
+         ;
+    rep_t  r = 1566083941 * T( b[k_mod_n] + b[kpp_mod_n] + b[km1_mod_n] );
+    b[kpp_mod_n] ^= r;
+    b[kpq_mod_n] ^= (r -= k_mod_n);
+    b[k_mod_n  ] =  r;
+  }
+
+}  // generate()
+
+// ----------------------------------------------------------------------
+// property functions:
+
+std::size_t
+  std::seed_seq::size() const
+{
+  return v.size();
+}
+
+template< class OutputIterator >
+void
+  std::seed_seq::param( OutputIterator dest ) const
+{
+  copy(v.begin(), v.end(), dest);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class InIter >
+void
+  std::seed_seq::copy32bits( InIter b, InIter const e )
+{
+  for(  ; b != e; ++b )
+    v.push_back( *b & 0xFFFFFFFFu );
+}
+// ======================================================================
+
+#endif  // DETAIL_SEED_SEQ
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

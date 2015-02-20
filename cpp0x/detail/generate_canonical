@@ -1,0 +1,70 @@
+#ifndef DETAIL_GENERATE_CANONICAL
+#define DETAIL_GENERATE_CANONICAL
+
+// ======================================================================
+//
+// generate_canonical: per C++11 26.5.7.2 [rand.util.canonical]
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+#include "cpp0x/cstdint"
+#include "cpp0x/detail/log2"
+//#include <iostream>
+#include <limits>
+
+namespace std {
+
+  template< class Real, size_t bits, class URNG >
+  Real
+    generate_canonical( URNG & );
+
+  template< class Real, class URNG >
+  Real
+    generate_canonical( URNG & );
+
+}
+
+// ======================================================================
+
+template< class Real, size_t bits, class URNG >
+Real
+  std::generate_canonical( URNG & g )
+{
+  constexpr size_t  d = numeric_limits<Real>::digits;
+  constexpr size_t  b = bits < d ? bits : d;
+
+  constexpr uintmax_t  R   = URNG::max - URNG::min + 1u;
+  constexpr size_t     lg2 = _::log2<uintmax_t,R>::value;
+
+  constexpr size_t  k = (b+lg2-1u) / lg2;
+
+  Real Rk = R;
+  //cout << "generate_canonical: Rk " << Rk << '\n';
+  Real S = (g() - g.min);
+  //cout << "generate_canonical: S0, Rk " << S << ", " << Rk << '\n';
+  for( size_t i = 1; i != k; ++i, Rk *= R )
+  {
+    S += (g() - g.min) * Rk;
+    //cout << "generate_canonical: S, Rk " << S << ", " << Rk << '\n';
+  }
+
+  //cout << "generate_canonical: S/Rk " << S/Rk << '\n';
+  return S / Rk;
+}
+
+// ======================================================================
+
+template< class Real, class URNG >
+Real
+  std::generate_canonical( URNG & g )
+{
+  constexpr size_t  d = numeric_limits<Real>::digits;
+  return generate_canonical<Real,d,URNG>(g);
+}
+
+// ======================================================================
+
+#endif  // DETAIL_GENERATE_CANONICAL
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
