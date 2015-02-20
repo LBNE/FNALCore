@@ -1,0 +1,43 @@
+# The parent line must be the first non-comment line in the file
+# This line defines the product name and version
+parent cpp0x v1_04_08
+defaultqual e6
+# These optional lines define the installed directories where
+# headers, libraries, and executables will be found
+# Use them only if your product does not conform to the defaults
+# Format: directory_type directory_path directory_name
+# The only recognized values of the first field are incdir, libdir, and bindir
+# The only recognized values of the second field are product_dir and fq_dir
+# The third field is not constrained
+incdir      product_dir	include
+libdir      fq_dir	lib
+bindir      fq_dir	bin
+fcldir      -
+#
+# The required "product version" line indicates that the remaining lines
+# define product/version pairs
+product		version
+boost		v1_56_0
+gcc		v4_8_2		e5
+gcc		v4_9_1		e6
+icc		v14_0_2
+cetbuildtools	v4_01_03	-	only_for_build
+end_product_list
+
+# Matrix of qualifiers versus dependent products
+qualifier	boost		gcc	icc	compiler	notes
+e5:debug	e5:debug	-nq-	-	gcc
+e5:opt		e5:opt		-nq-	-	gcc
+e5:prof		e5:prof		-nq-	-	gcc
+e6:debug	e6:debug	-nq-	-	gcc
+e6:opt		e6:opt		-nq-	-	gcc
+e6:prof		e6:prof		-nq-	-	gcc
+i1:debug	e5:debug	-	i1      icc
+i1:prof         e5:prof         -	i1      icc
+end_qualifier_list
+
+# Local Variables:
+# tab-width: 8
+# End:
+
+# vi:set ts=8 noexpandtab:

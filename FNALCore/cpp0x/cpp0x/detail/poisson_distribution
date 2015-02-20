@@ -1,0 +1,324 @@
+#ifndef DETAIL_POISSON_DISTRIBUTION
+#define DETAIL_POISSON_DISTRIBUTION
+
+// ======================================================================
+//
+// poisson_distribution: per C++11 26.5.8.4.1 [rand.dist.pois.poisson]
+//
+// Produce integer values i, 0 <= i
+//
+// ======================================================================
+
+#include "cpp0x/cmath"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Int = int >
+    class poisson_distribution;
+
+  template< class Int, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>      &
+                , poisson_distribution<Int> const &
+                );
+
+  template< class Int, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , poisson_distribution<Int>  &
+                );
+
+}
+
+// ======================================================================
+
+template< class Int >
+  class std::poisson_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_integral<Int>::value
+               , "std::poisson_distribution<> requires a integral type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Int      result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+  explicit  poisson_distribution( double = 1.0 );
+  explicit  poisson_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  double       mean ( ) const  { return parm.mean(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & );
+  result_type  min  ( ) const  { return Int(); }
+  result_type  max  ( ) const  { return numeric_limits<Int>::max(); }
+
+  // equality comparisons:
+  bool  operator == ( poisson_distribution const & ) const;
+  bool  operator != ( poisson_distribution const & ) const;
+
+};  // poisson_distribution<>
+
+// ======================================================================
+
+template< class Int >
+  class std::poisson_distribution<Int>::param_t
+{
+  friend  class poisson_distribution<Int>;
+
+private:
+  double  mean_;
+  double  e_mean_;
+
+  // helper functions:
+  template< class URNG >
+    Int  generate( URNG & ) const;
+  static range_error bad_mean;
+
+public:
+
+  // types:
+  typedef  Int                        result_type;
+  typedef  poisson_distribution<Int>  distribution_type;
+
+  // constructors:
+  explicit  param_t( double = 1.0 );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  double  mean( ) const;
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+  // statistics:
+  _::stats  expected( ) const;
+
+};  // poisson_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Int >
+  std::poisson_distribution<Int>::param_t::
+  param_t( double mean )
+: mean_  ( 0.0 < mean ? mean : throw bad_mean )
+, e_mean_( exp(-mean) )
+{ }
+
+// ----------------------------------------------------------------------
+// property functions:
+
+template< class Int >
+double
+  std::poisson_distribution<Int>::param_t::
+  mean( ) const
+{
+  return mean_;
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+bool
+  std::poisson_distribution<Int>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return mean_ == other.mean_;
+}
+
+template< class Int >
+bool
+  std::poisson_distribution<Int>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+template< class Int >
+std::_::stats
+  std::poisson_distribution<Int>::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  mean     = mean_
+           ,  variance = mean
+           ,  skew     = 1.0L / sqrt(variance)
+           ,  kurtosis = 1.0L / variance;
+
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Int >
+template< class URNG >
+Int
+  std::poisson_distribution<Int>::param_t::
+  generate( URNG & u ) const
+{
+  constexpr size_t  nbits = numeric_limits<double>::digits;
+
+  result_type x = result_type(0);
+  for( double prod = generate_canonical<double,nbits>(u)
+     ; prod > e_mean_
+     ; prod *= generate_canonical<double,nbits>(u)
+     )
+    ++x;
+
+  return x;
+}
+
+template< class Int >
+std::range_error
+  std::poisson_distribution<Int>::param_t::
+  bad_mean("std::poisson_distribution<> requires 0 < mean");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Int >
+  std::poisson_distribution<Int>::
+  poisson_distribution( double mean )
+: parm( mean )
+{ }
+
+template< class Int >
+  std::poisson_distribution<Int>::
+  poisson_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Int >
+void
+  std::poisson_distribution<Int>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::poisson_distribution<Int>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::poisson_distribution<Int>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// property functions:
+
+template< class Int >
+void
+  std::poisson_distribution<Int>::
+  param( param_type const & p )
+{
+  parm = p;
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+inline  bool
+  std::poisson_distribution<Int>::
+  operator == ( poisson_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Int >
+bool
+  std::poisson_distribution<Int>::
+  operator != ( poisson_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Int, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>     & os
+                   , poisson_distribution<Int> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+
+  return os << d.mean();
+}
+
+template< class Int, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , poisson_distribution<Int>   & d
+                   )
+{
+  typedef  poisson_distribution<Int>     dist_t;
+  typedef  typename dist_t::result_type  result_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  double mean;
+  is >> mean;
+  if( ! is.fail() )
+    d.param( param_t(mean) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_POISSON_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

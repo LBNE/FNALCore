@@ -1,0 +1,47 @@
+#ifndef CPP0X_SYSTEM_ERROR
+#define CPP0X_SYSTEM_ERROR
+
+// ======================================================================
+//
+// system_error - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+// ----------------------------------------------------------------------
+// <system_error>
+
+#if defined(CPP0X_HAS_SYSTEM_ERROR_HDR)
+  #include <system_error>
+
+#else
+  #define BOOST_SYSTEM_NO_DEPRECATED
+  #include "boost/system/system_error.hpp"
+  namespace std {
+    namespace errc = ::boost::system::errc;
+    using ::boost::system::errc::make_error_code;
+    using ::boost::system::errc::make_error_condition;
+    using ::boost::system::error_category;
+    using ::boost::system::error_code;
+    using ::boost::system::error_condition;
+    using ::boost::system::generic_category;
+    using ::boost::system::is_error_code_enum;
+    using ::boost::system::is_error_condition_enum;
+    using ::boost::system::system_category;
+    using ::boost::system::system_error;
+  }
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

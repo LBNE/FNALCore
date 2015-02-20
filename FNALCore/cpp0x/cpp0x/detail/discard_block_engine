@@ -1,0 +1,263 @@
+#ifndef DETAIL_DISCARD_BLOCK_ENGINE
+#define DETAIL_DISCARD_BLOCK_ENGINE
+
+// ======================================================================
+//
+// discard_block_engine:  per C++11 26.5.4.2 [rand.adapt.disc]
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+#include "cpp0x/detail/stream_state_guard"
+#include <iosfwd>
+
+// ======================================================================
+
+namespace std {
+
+  template< class Engine, size_t p, size_t r >
+    class discard_block_engine;
+
+  template< class Engine, size_t p, size_t r, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>            &
+                , discard_block_engine<Engine,p,r> const &
+                );
+
+  template< class Engine, size_t p, size_t r, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>      &
+                , discard_block_engine<Engine,p,r> &
+                );
+
+}
+
+// ======================================================================
+
+template< class Engine, size_t p, size_t r >
+  class std::discard_block_engine
+{
+  // validate parameters:
+  STATIC_ASSERT( 0u < r && r <= p
+               , "std::discard_block_engine<> requires 0 < r <= p"
+               );
+
+private:
+  Engine e;
+  size_t n;
+
+public:
+
+  // types:
+  typedef  typename Engine::result_type  result_type;
+
+  // engine characteristics:
+  static  constexpr size_t  block_size = p;
+  static  constexpr size_t  used_block = r;
+  static  constexpr result_type  min  =  Engine::min;
+  static  constexpr result_type  max  =  Engine::max;
+
+  // constructors and seeding functions:
+  discard_block_engine();
+  void seed();
+  explicit
+    discard_block_engine( result_type );
+  template< class Sseq >
+  explicit
+    discard_block_engine( Sseq &
+                        , typename
+                          enable_if< _::is_sseq< Sseq
+                                               , discard_block_engine
+                                               >::value
+                                   >::type * = nullptr
+                        );
+  void
+    seed( result_type );
+  template< class Sseq >
+  typename enable_if< _::is_sseq< Sseq
+                                , discard_block_engine
+                                >::value
+                    >::type
+    seed( Sseq & );
+
+  // use compiler-generated copy c'tor, copy assignment and d'tor
+
+  // generating functions:
+  result_type
+    operator () ( );
+  void
+    discard( unsigned long long );
+
+  // property functions:
+  Engine const &
+    base( ) const noexcept;
+
+  // equality comparisons:
+  bool
+    operator == ( discard_block_engine const & ) const;
+  bool
+    operator != ( discard_block_engine const & ) const;
+
+  // i/o:
+  template< class E, size_t P, size_t R, class charT, class traits >
+  friend basic_ostream<charT, traits> &
+    operator << ( basic_ostream<charT,traits>       &
+                , discard_block_engine<E,P,R> const &
+                );
+  template< class E, size_t P, size_t R, class charT, class traits >
+  friend basic_istream<charT, traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , discard_block_engine<E,P,R> &
+                );
+
+};  // discard_block_engine<>
+
+// ----------------------------------------------------------------------
+// constructors and seeding functions:
+
+template< class Engine, size_t p, size_t r >
+  std::discard_block_engine<Engine,p,r>::
+  discard_block_engine( )
+: e( )
+, n( 0u )
+{ }
+
+template< class Engine, size_t p, size_t r >
+  std::discard_block_engine<Engine,p,r>::
+  discard_block_engine( result_type s )
+: e( s )
+, n( 0u )
+{ }
+
+template< class Engine, size_t p, size_t r >
+template< class Sseq >
+  std::discard_block_engine<Engine,p,r>::
+  discard_block_engine( Sseq & q
+                            , typename
+                              enable_if< _::is_sseq< Sseq
+                                                   , discard_block_engine
+                                                   >::value
+                                       >::type *
+                            )
+: e( q )
+, n( 0u )
+{ }
+
+template< class Engine, size_t p, size_t r >
+void
+  std::discard_block_engine<Engine,p,r>::
+  seed( )
+{
+  e.seed(), n = 0u;
+}
+
+template< class Engine, size_t p, size_t r >
+void
+  std::discard_block_engine<Engine,p,r>::
+  seed( result_type s )
+{
+  e.seed(s), n = 0u;
+}
+
+template< class Engine, size_t p, size_t r >
+template< class Sseq >
+typename std::enable_if< std::_::is_sseq< Sseq
+                                        , std::discard_block_engine<Engine,p,r>
+                                        >::value
+                       >::type
+  std::discard_block_engine<Engine,p,r>::
+  seed( Sseq & q )
+{
+  e.seed(q), n = 0u;
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Engine, size_t p, size_t r >
+typename std::discard_block_engine<Engine,p,r>::result_type
+  std::discard_block_engine<Engine,p,r>::
+  operator () ( )
+{
+  if( n >= r )
+    e.discard(p-r), n = 0;
+  return ++n, e();
+}
+
+template< class Engine, size_t p, size_t r >
+void
+  std::discard_block_engine<Engine,p,r>::
+  discard( unsigned long long z )
+{
+  for(  ; z != 0uLL; --z )
+    (*this)( );
+}
+
+// ----------------------------------------------------------------------
+// property functions:
+
+template< class Engine, size_t p, size_t r >
+Engine const &
+  std::discard_block_engine<Engine,p,r>::
+  base( ) const noexcept
+{
+  return e;
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Engine, size_t p, size_t r >
+bool
+  std::discard_block_engine<Engine,p,r>::
+  operator == ( discard_block_engine const & other ) const
+{
+  return n == other.n
+      && e == other.e;
+}
+
+template< class Engine, size_t p, size_t r >
+bool
+  std::discard_block_engine<Engine,p,r>::
+  operator != ( discard_block_engine const & other ) const
+{
+  return ! (*this == other );
+}
+
+// ----------------------------------------------------------------------
+// i/o:
+
+template< class Engine, size_t p, size_t r, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>            & os
+                   , discard_block_engine<Engine,p,r> const & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  return os << e.e << sp << e.n;
+}
+
+template< class Engine, size_t p, size_t r, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>      & is
+                   , discard_block_engine<Engine,p,r> & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(is);
+
+  Engine tmp_e;
+  size_t tmp_n;
+  is >> tmp_e >> tmp_n;
+  if( ! is.fail() )
+    e.e = tmp_e, e.n = tmp_n;
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_DISCARD_BLOCK_ENGINE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

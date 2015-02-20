@@ -1,0 +1,71 @@
+#ifndef _STREAM_STATE_GUARD
+#define _STREAM_STATE_GUARD
+
+// ======================================================================
+//
+// stream_state_guard: a RAII-style guard to ensure a stream's state is
+//                     properly saved and later restored
+//
+// ======================================================================
+
+#include <iosfwd>
+
+namespace std {
+namespace _ {
+
+  template< class charT, class traits >
+    class stream_state_guard;
+
+}  // std::_
+}  // std
+
+// ----------------------------------------------------------------------
+
+template< class charT, class traits >
+  class std::_::stream_state_guard
+{
+private:
+  typedef  std::basic_ios<charT,traits>  stream_t;
+  typedef  typename stream_t::fmtflags   fmtflags_t;
+
+  stream_t &  stream;
+  fmtflags_t  fmtflags;
+  charT       fillchar;
+
+  // no copying:
+  stream_state_guard( stream_state_guard const & );
+  void  operator =  ( stream_state_guard const & );
+
+public:
+  explicit
+    stream_state_guard( std::basic_istream<charT,traits> & is )
+  : stream  ( is )
+  , fmtflags( stream.flags() )
+  , fillchar( stream.fill() )
+  {
+    is.flags( ios_base::dec | ios_base::skipws );
+  }
+
+  explicit
+    stream_state_guard( std::basic_ostream<charT,traits> & os )
+  : stream  ( os )
+  , fmtflags( stream.flags() )
+  , fillchar( stream.fill() )
+  {
+    os.flags( ios_base::dec | ios_base::left );
+    os.fill( os.widen(' ') );
+  }
+
+  ~stream_state_guard( ) noexcept
+  {
+    stream.flags( fmtflags );
+    stream.fill( fillchar );
+  }
+
+};  // stream_state_guard<>
+
+// ======================================================================
+
+#endif  // _STREAM_STATE_GUARD
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

@@ -1,0 +1,476 @@
+#ifndef DETAIL_MERSENNE_TWISTER_ENGINE
+#define DETAIL_MERSENNE_TWISTER_ENGINE
+
+// ======================================================================
+//
+// mersenne_twister_engine:  per C++11 26.5.3.2 [rand.eng.mers]
+//
+// ======================================================================
+
+#include "cpp0x/algorithm"
+#include "cpp0x/cstddef"
+#include "cpp0x/cstdint"
+#include "cpp0x/detail/is_sseq"
+#include "cpp0x/detail/low_order_bits"
+#include "cpp0x/detail/pow2"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/iterator"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  template< class UInt
+          , size_t w, size_t n, size_t m, size_t r
+          , UInt a, size_t u, UInt d, size_t s
+          , UInt b, size_t t, UInt c, size_t l
+          , UInt f
+          >
+  class mersenne_twister_engine;
+
+  template< class UInt
+          , size_t w, size_t n, size_t m, size_t r
+          , UInt a, size_t u, UInt d, size_t s
+          , UInt b, size_t t, UInt c, size_t l
+          , UInt f
+          , class charT, class traits
+          >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>                                   &
+                , mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f> const &
+                );
+
+  template< class UInt
+          , size_t w, size_t n, size_t m, size_t r
+          , UInt a, size_t u, UInt d, size_t s
+          , UInt b, size_t t, UInt c, size_t l
+          , UInt f
+          , class charT, class traits
+          >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>                             &
+                , mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f> &
+                );
+
+  }
+
+// ======================================================================
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+  class std::mersenne_twister_engine
+{
+  // useful constants:
+  static  constexpr UInt
+    _zero_                = 0u
+  , _one_                 = 1u
+  , _digits_              = numeric_limits<UInt>::digits
+  , _min_                 = _one_
+  , _max_                 = _::pow2m1<UInt,w>::value
+  , _low_order_w_bits_    = _::low_order_bits<UInt,w>::value
+  , _low_order_r_bits_    = _::low_order_bits<UInt,r>::value
+  , _high_order_wmr_bits_ = _low_order_w_bits_ ^ _low_order_r_bits_
+  ;
+
+  // validate parameters:
+  STATIC_ASSERT( std::is_unsigned<UInt>::value
+               , "std::mersenne_twister_engine<> requires an unsigned type"
+               );
+  STATIC_ASSERT( 0 < m && m <= n
+               , "std::mersenne_twister_engine<> requires 0 < m <= n"
+               );
+  STATIC_ASSERT( 2*u < w
+               , "std::mersenne_twister_engine<> requires 2*u < w"
+               );
+  STATIC_ASSERT( r < w
+               , "std::mersenne_twister_engine<> requires r < w"
+               );
+  STATIC_ASSERT( u <= w
+               , "std::mersenne_twister_engine<> requires u <= w"
+               );
+  STATIC_ASSERT( s <= w
+               , "std::mersenne_twister_engine<> requires s <= w"
+               );
+  STATIC_ASSERT( t <= w
+               , "std::mersenne_twister_engine<> requires t <= w"
+               );
+  STATIC_ASSERT( l <= w
+               , "std::mersenne_twister_engine<> requires l <= w"
+               );
+  STATIC_ASSERT( w <= _digits_
+               , "std::mersenne_twister_engine<> requires w <= std::numeric_limits<UInt>::digits"
+               );
+  STATIC_ASSERT( a <= _max_
+               , "std::mersenne_twister_engine<> requires a < 2^w"
+               );
+  STATIC_ASSERT( b <= _max_
+               , "std::mersenne_twister_engine<> requires b < 2^w"
+               );
+  STATIC_ASSERT( c <= _max_
+               , "std::mersenne_twister_engine<> requires c < 2^w"
+               );
+  STATIC_ASSERT( d <= _max_
+               , "std::mersenne_twister_engine<> requires d < 2^w"
+               );
+  STATIC_ASSERT( f <= _max_
+               , "std::mersenne_twister_engine<> requires f < 2^w"
+               );
+  STATIC_ASSERT( _min_ < _max_
+               , "std::mersenne_twister_engine<> requires min < max"
+               );
+
+private:
+  UInt    x[n];
+  size_t  i;
+
+  UInt &  X( size_t k )        { return x[k % n]; }
+  UInt    X( size_t k ) const  { return x[k % n]; }
+
+public:
+
+  // types:
+  typedef UInt result_type;
+
+  // engine characteristics:
+  static  constexpr size_t       word_size                 = w;
+  static  constexpr size_t       state_size                = n;
+  static  constexpr size_t       shift_size                = m;
+  static  constexpr size_t       mask_bits                 = r;
+  static  constexpr UInt         xor_mask                  = a;
+  static  constexpr size_t       tempering_u               = u;
+  static  constexpr UInt         tempering_d               = d;
+  static  constexpr size_t       tempering_s               = s;
+  static  constexpr UInt         tempering_b               = b;
+  static  constexpr size_t       tempering_t               = t;
+  static  constexpr UInt         tempering_c               = c;
+  static  constexpr size_t       tempering_l               = l;
+  static  constexpr UInt         initialization_multiplier = f;
+  static  constexpr result_type  min                       = _min_;
+  static  constexpr result_type  max                       = _max_;
+  static  constexpr result_type  default_seed              = 5489u;
+
+  // constructors and seeding functions:
+  explicit
+    mersenne_twister_engine( result_type = default_seed );
+  template< class Sseq >
+  explicit
+    mersenne_twister_engine( Sseq &
+                           , typename
+                             std::enable_if< _::is_sseq< Sseq
+                                                       , mersenne_twister_engine
+                                                       >::value
+                                           >::type * = nullptr
+                           );
+  void
+    seed( result_type = default_seed );
+  template< class Sseq >
+  typename std::enable_if< _::is_sseq< Sseq
+                                     , mersenne_twister_engine
+                                     >::value
+                         >::type
+    seed( Sseq & );
+
+  // use compiler-generated d'tor
+
+  // copy functions:
+    mersenne_twister_engine( mersenne_twister_engine const & );
+  mersenne_twister_engine &
+    operator = ( mersenne_twister_engine const & );
+
+  // generating functions:
+  result_type
+    operator () ( );
+  void
+    discard( unsigned long long );
+
+  // equality comparisons:
+  bool
+    operator == ( mersenne_twister_engine const & ) const;
+  bool
+    operator != ( mersenne_twister_engine const & ) const;
+
+  // i/o:
+  template< class UI
+          , size_t W, size_t N, size_t M, size_t R
+          , UI A, size_t U, UI D, size_t S
+          , UI B, size_t T, UI C, size_t L
+          , UI F
+          , class charT, class traits
+          >
+  friend  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>                                 &
+                , mersenne_twister_engine<UI,W,N,M,R,A,U,D,S,B,T,C,L,F> const &
+                );
+  template< class UI
+          , size_t W, size_t N, size_t M, size_t R
+          , UI A, size_t U, UI D, size_t S
+          , UI B, size_t T, UI C, size_t L
+          , UI F
+          , class charT, class traits
+          >
+  friend  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>                           &
+                , mersenne_twister_engine<UI,W,N,M,R,A,U,D,S,B,T,C,L,F> &
+                );
+
+};  // mersenne_twister_engine<>
+
+// ---------------------------------------------------------------------
+// constructors and seeding functions:
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  mersenne_twister_engine( result_type value )
+{
+  seed(value);
+}
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+template< class Sseq >
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  mersenne_twister_engine( Sseq & q
+                         , typename
+                           std::enable_if< _::is_sseq< Sseq
+                                                     , mersenne_twister_engine
+                                                     >::value
+                                         >::type *
+                         )
+{
+  seed(q);
+}
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+void
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  seed( result_type value )
+{
+  x[0] = value & _low_order_w_bits_;
+  for( i = 1u; i != n; ++i )
+    x[i] = ( f * ( x[i-1u]
+                 ^ (x[i-1u] >> (w-2u))
+                 )
+           + i
+           ) & _low_order_w_bits_;
+  i = 0u;
+}
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+template< class Sseq >
+typename std::enable_if< std::_::is_sseq< Sseq
+                                        , std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>
+                                        >::value
+                       >::type
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  seed( Sseq & q )
+{
+  constexpr size_t  k = (w + 31u) / 32u;
+  uint32_t arr[n*k]; q.generate(arr + 0, arr + n*k);
+
+  bool all_zeroes_so_far = true;
+  for( i = 0; i != n; ++i ) {
+    UInt S = arr[k*i];
+    switch( k ) {
+      default:  throw range_error("mersenne_twister_engine<>: word size > 128 bits!");
+      case 4u:  S += arr[k*i+3] << (3u * 32u);
+      case 3u:  S += arr[k*i+2] << (2u * 32u);
+      case 2u:  S += arr[k*i+1] << (1u * 32u);
+      case 1u:  ;
+    }
+    x[i] = S & _low_order_w_bits_;
+
+    if( all_zeroes_so_far )
+      all_zeroes_so_far = i == 0u  ?  ((x[0] & _high_order_wmr_bits_) == 0u)
+                                   :  (x[i] == 0u);
+  }
+  if( all_zeroes_so_far )
+    x[0] = _max_;
+  i = 0;
+}
+
+// ---------------------------------------------------------------------
+// copy functions:
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  mersenne_twister_engine( mersenne_twister_engine const & other )
+: i( other.i )
+{
+  uninitialized_copy_n( other.x+0, n, x+0 );
+}
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f> &
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  operator = ( mersenne_twister_engine const & other )
+{
+  i = other.i;
+  copy_n( other.x+0, n, x+0 );
+  return *this;
+}
+
+// ---------------------------------------------------------------------
+// generating functions:
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+UInt
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  operator () ( )
+{
+  UInt &  Xi = x[i];
+
+  // transition algorithm:
+  size_t const       ip1 = (i + 1u) % n;
+  size_t const       ipm = (i + m ) % n;
+  result_type const  Y   = (Xi     & _high_order_wmr_bits_)
+                         | (x[ip1] & _low_order_r_bits_   );
+  Xi = x[ipm] ^ (Y >> 1u) ^ (Y & _one_ ? a : _zero_);
+  i = ip1;
+
+  // generation algorithm:
+  result_type  z = Xi ^ ((Xi >> u) & d);       // z1
+  z ^= (((z << s) & _low_order_w_bits_) & b);  // z2
+  z ^= (((z << t) & _low_order_w_bits_) & c);  // z3
+  z ^= (z >> l);                               // z4
+
+  return z;
+}
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+void
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  discard( unsigned long long z )
+{
+  for(  ; z != 0uLL; --z )
+    (*this)( );
+}
+
+// ---------------------------------------------------------------------
+// equality comparisons:
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+bool
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  operator == ( mersenne_twister_engine const & other ) const
+{
+  for( size_t k = 0u; k != n; ++k )
+    if( X(i+k) != other.X(other.i+k) )
+      return false;
+  return true;
+}
+
+template< class UInt
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , UInt a, std::size_t u, UInt d, std::size_t s
+        , UInt b, std::size_t t, UInt c, std::size_t l
+        , UInt f
+        >
+bool
+  std::mersenne_twister_engine<UInt,w,n,m,r,a,u,d,s,b,t,c,l,f>::
+  operator != ( mersenne_twister_engine const & other ) const
+{
+  return ! (*this == other );
+}
+
+// ---------------------------------------------------------------------
+// i/o:
+
+template< class U
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , U a, std::size_t u, U d, std::size_t s
+        , U b, std::size_t t, U c, std::size_t l
+        , U f
+        , class charT, class traits
+        >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>                                &       os
+                   , mersenne_twister_engine<U,w,n,m,r,a,u,d,s,b,t,c,l,f> const & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  os << e.X(e.i);
+  for( size_t k = 1u; k != n; ++k )
+    os << sp << e.X(e.i+k);
+
+  return os;
+}
+
+template< class U
+        , std::size_t w, std::size_t n, std::size_t m, std::size_t r
+        , U a, std::size_t u, U d, std::size_t s
+        , U b, std::size_t t, U c, std::size_t l
+        , U f
+        , class charT, class traits
+        >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>                          & is
+                   , mersenne_twister_engine<U,w,n,m,r,a,u,d,s,b,t,c,l,f> & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(is);
+
+  U arr[n];
+  copy_n(istream_iterator<U>(is), n, arr+0);
+  if( ! is.fail() )
+    copy(arr+0, arr+n, e.x+0), e.i = 0;
+
+  return is;
+}
+
+
+// ======================================================================
+
+#endif  // DETAIL_MERSENNE_TWISTER_ENGINE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

@@ -1,0 +1,44 @@
+#ifndef _LOG2
+#define _LOG2
+
+// ======================================================================
+//
+// log2: compile-time binary logarithm
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+
+namespace std {
+namespace _ {
+
+  template< class UInt, UInt n, bool = n == 1 >
+    struct log2;
+  template< class UInt, UInt n >
+    struct log2<UInt,n,true>;
+
+}  // std::_
+}  // std::
+
+// ----------------------------------------------------------------------
+
+template< class UInt, UInt n, bool >
+  struct std::_::log2
+{
+  STATIC_ASSERT( n != 0u
+               , "std::_::log2 requires n != 0"
+               );
+  static  constexpr std::size_t  value = 1u + log2<UInt,n/2>::value;
+};
+
+template< class UInt, UInt n >
+  struct std::_::log2<UInt,n,true>
+{
+  static  constexpr std::size_t  value = 0u;
+};
+
+// ======================================================================
+
+#endif  // _LOG2
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

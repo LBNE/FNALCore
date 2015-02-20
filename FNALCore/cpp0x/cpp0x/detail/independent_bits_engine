@@ -1,0 +1,303 @@
+#ifndef DETAIL_INDEPENDENT_BITS_ENGINE
+#define DETAIL_INDEPENDENT_BITS_ENGINE
+
+// ======================================================================
+//
+// independent_bits_engine:  per C++11 26.5.4.3 [rand.adapt.ibits]
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+#include "cpp0x/detail/low_order_bits"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/detail/log2"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+
+// ======================================================================
+
+namespace std {
+
+  template< class Engine, size_t w, class UInt >
+    class independent_bits_engine;
+
+  template< class Engine, size_t w, class UInt, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>                  &
+                , independent_bits_engine<Engine,w,UInt> const &
+                );
+
+  template< class Engine, size_t w, class UInt, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>            &
+                , independent_bits_engine<Engine,w,UInt> &
+                );
+
+}
+
+// ======================================================================
+
+template< class Engine, size_t w, class UInt >
+  class std::independent_bits_engine
+{
+  // useful types and constants:
+  typedef  typename Engine::result_type
+           eng_result_t;
+  typedef  typename conditional< sizeof(UInt) >= sizeof(eng_result_t)
+                               , UInt
+                               , eng_result_t
+                               >::type
+           work_t;
+  static  constexpr size_t  Ud = numeric_limits<UInt>::digits;
+  static  constexpr size_t  Ed = numeric_limits<eng_result_t>::digits;
+  static  constexpr size_t  wd = numeric_limits<work_t>::digits;
+  static  constexpr work_t  R  = Engine::max - Engine::min + work_t(1u);
+  static  constexpr size_t  m  = (R == 0u) ? Ed : _::log2<work_t,R>::value;
+  static  constexpr size_t  N  = w / m + size_t(w % m != 0u);
+  static  constexpr size_t  W0 = w / N;
+  static  constexpr work_t  Y0 = (R == 0u) ? R : (R >> W0) << W0;
+  static  constexpr size_t  n  = R - Y0 <= Y0 / N ? N : N + 1u;
+  static  constexpr size_t  w0 = w / n;
+  static  constexpr size_t  w1 = w0 + 1u;
+  static  constexpr size_t  n0 = n - w % n;
+  static  constexpr work_t  y0 = (w0 >= wd) ? 0u : (R >> w0) << w0;
+  static  constexpr work_t  y1 = (w0 >= wd - 1u) ? 0u : (R >> w1) << w1;
+
+  // validate parameters:
+  STATIC_ASSERT( is_unsigned<UInt>::value
+               , "std::independent_bits_engine<> requires an unsigned type"
+               );
+  STATIC_ASSERT( 0u < w && w <= Ud
+               , "std::independent_bits_engine<> requires 0 < w <= numeric_limits<UInt>::digits"
+               );
+  STATIC_ASSERT( w == n0 * w0 + (n - n0) * w1
+               , "std::independent_bits_engine<> internal inconsistency!"
+               );
+
+private:
+  Engine e;
+
+public:
+
+  // types:
+  typedef  UInt  result_type;
+
+  // engine characteristics:
+  static  constexpr result_type  min = UInt();
+  static  constexpr result_type  max = ~ min;
+
+  // constructors and seeding functions:
+  independent_bits_engine( );
+  void
+    seed( );
+  explicit
+    independent_bits_engine( result_type );
+  template< class Sseq >
+  explicit
+    independent_bits_engine( Sseq &
+                        , typename
+                          enable_if< _::is_sseq< Sseq
+                                               , independent_bits_engine
+                                               >::value
+                                   >::type * = nullptr
+                        );
+  void
+    seed( result_type );
+  template< class Sseq >
+  typename enable_if< _::is_sseq< Sseq
+                                , independent_bits_engine
+                                >::value
+                    >::type
+    seed( Sseq & );
+
+  // use compiler-generated copy c'tor, copy assignment and d'tor
+
+  // generating functions:
+  result_type
+    operator () ( );
+  void
+    discard( unsigned long long );
+
+  // property functions:
+  Engine const &
+    base( ) const noexcept;
+
+  // equality comparisons:
+  bool
+    operator == ( independent_bits_engine const & ) const;
+  bool
+    operator != ( independent_bits_engine const & ) const;
+
+  // i/o:
+  template< class E, size_t W, class U, class charT, class traits >
+  friend basic_ostream<charT, traits> &
+    operator << ( basic_ostream<charT,traits>          &
+                , independent_bits_engine<E,W,U> const &
+                );
+  template< class E, size_t W, class U, class charT, class traits >
+  friend basic_istream<charT, traits> &
+    operator >> ( basic_istream<charT,traits>    &
+                , independent_bits_engine<E,W,U> &
+                );
+
+};  // independent_bits_engine<>
+
+// ----------------------------------------------------------------------
+// constructors and seeding functions:
+
+template< class Engine, size_t w, class UInt >
+  std::independent_bits_engine<Engine,w,UInt>::
+  independent_bits_engine( )
+: e( )
+{ }
+
+template< class Engine, size_t w, class UInt >
+  std::independent_bits_engine<Engine,w,UInt>::
+  independent_bits_engine( result_type s )
+: e( s )
+{ }
+
+template< class Engine, size_t w, class UInt >
+template< class Sseq >
+  std::independent_bits_engine<Engine,w,UInt>::
+  independent_bits_engine( Sseq & q
+                            , typename
+                              enable_if< _::is_sseq< Sseq
+                                                   , independent_bits_engine
+                                                   >::value
+                                       >::type *
+                            )
+: e( q )
+{ }
+
+template< class Engine, size_t w, class UInt >
+void
+  std::independent_bits_engine<Engine,w,UInt>::
+  seed( )
+{
+  e.seed();
+}
+
+template< class Engine, size_t w, class UInt >
+void
+  std::independent_bits_engine<Engine,w,UInt>::
+  seed( result_type s )
+{
+  e.seed(s);
+}
+
+template< class Engine, size_t w, class UInt >
+template< class Sseq >
+typename std::enable_if< std::_::is_sseq< Sseq
+                                        , std::independent_bits_engine<Engine,w,UInt>
+                                        >::value
+                       >::type
+  std::independent_bits_engine<Engine,w,UInt>::
+  seed( Sseq & q )
+{
+  e.seed(q);
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Engine, size_t w, class UInt >
+typename std::independent_bits_engine<Engine,w,UInt>::result_type
+  std::independent_bits_engine<Engine,w,UInt>::
+  operator () ( )
+{
+  result_type  S = 0u;
+  work_t       u;
+
+  for( size_t k = 0u; k != n0; ++k ) {
+    do
+      u = e() - e.min;
+    while ( R != 0u && u >= y0 );
+    S = (S << w0) | (u & _::low_order_bits<work_t,w0>::value);
+  }
+
+  for( size_t k = n0; k != n; ++k ) {
+    do
+      u = e() - e.min;
+    while ( R != 0u && u >= y1 );
+    S = (S << w1) | (u & _::low_order_bits<work_t,w1>::value);
+  }
+
+  return S;
+}
+
+template< class Engine, size_t w, class UInt >
+void
+  std::independent_bits_engine<Engine,w,UInt>::
+  discard( unsigned long long z )
+{
+  for(  ; z != 0uLL; --z )
+    (*this)( );
+}
+
+// ----------------------------------------------------------------------
+// property functions:
+
+template< class Engine, size_t w, class UInt >
+Engine const &
+  std::independent_bits_engine<Engine,w,UInt>::
+  base( ) const noexcept
+{
+  return e;
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Engine, size_t w, class UInt >
+bool
+  std::independent_bits_engine<Engine,w,UInt>::
+  operator == ( independent_bits_engine const & other ) const
+{
+  return e == other.e;
+}
+
+template< class Engine, size_t w, class UInt >
+bool
+  std::independent_bits_engine<Engine,w,UInt>::
+  operator != ( independent_bits_engine const & other ) const
+{
+  return ! (*this == other );
+}
+
+// ----------------------------------------------------------------------
+// i/o:
+
+template< class Engine, size_t w, class UInt, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>                  & os
+                   , independent_bits_engine<Engine,w,UInt> const & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+
+  return os << e.e;
+}
+
+template< class Engine, size_t w, class UInt, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>            & is
+                   , independent_bits_engine<Engine,w,UInt> & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(is);
+
+  Engine tmp_e;
+  is >> tmp_e;
+  if( ! is.fail() )
+    e.e = tmp_e;
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_INDEPENDENT_BITS_ENGINE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

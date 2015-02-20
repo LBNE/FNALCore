@@ -1,0 +1,99 @@
+#ifndef _A_X_PLUS_C_MOD_M
+#define _A_X_PLUS_C_MOD_M
+
+// ======================================================================
+//
+// a_x_plus_c_mod_m: a * x + c (mod m)
+//
+// This header is intended solely for use by the <random> header,
+// and with arguments which are in the range [0,m-1] for modulus m.
+//
+// Note that unused code paths guarded by only compile-time values will
+// be elided by the compiler at a sufficiently high optimization level.
+//
+// ======================================================================
+
+#include "cpp0x/type_traits"
+
+namespace std {
+namespace _ {
+
+  template< class UInt, UInt a, UInt c, UInt m
+          , bool = (m == 0u)
+          >
+    class a_x_plus_c_mod_m;
+
+  template< class UInt, UInt a, UInt c, UInt m >
+    class a_x_plus_c_mod_m<UInt,a,c,m,true>;
+  template< class UInt, UInt a, UInt c, UInt m >
+    class a_x_plus_c_mod_m<UInt,a,c,m,false>;
+
+}  // std::_
+}  // std
+
+// ----------------------------------------------------------------------
+
+template< class UInt, UInt a, UInt c, UInt m >
+  class std::_::a_x_plus_c_mod_m<UInt,a,c,m,true>
+{
+  STATIC_ASSERT( std::is_unsigned<UInt>::value
+               , "std::_::a_x_plus_c_mod_m<> requires an unsigned type"
+               );
+
+public:
+  UInt
+    operator () ( UInt x )
+  {
+    return a * x + c;  // treat m == 0 as mod 2^w
+  }
+
+};  // a_x_plus_c_mod_m<,,,true>
+
+// ----------------------------------------------------------------------
+
+template< class UInt, UInt a, UInt c, UInt m >
+  class std::_::a_x_plus_c_mod_m<UInt,a,c,m,false>
+{
+  STATIC_ASSERT( std::is_unsigned<UInt>::value
+               , "std::_::a_x_plus_c_mod_m<> requires an unsigned type"
+               );
+  STATIC_ASSERT( a < m
+               , "std::_::a_x_plus_c_mod_m<> requires a < m"
+               );
+  STATIC_ASSERT( c < m
+               , "std::_::a_x_plus_c_mod_m requires c < m"
+               );
+
+private:
+  static  UInt const  q = m / a;
+  static  UInt const  r = m % a;
+
+public:
+  UInt
+    operator () ( UInt x )
+  {
+    // x *= a:
+    if( a == 1u )
+      x %= m;
+    else {
+      UInt const  u = a * (x % q);
+      UInt const  v = r * (x / q);
+      x = ( u >= v )  ?  u - v
+                      :  m - v + u;
+    }
+
+    // x += c:
+    UInt const  d = m - x;
+    if( d > c )  x += c;
+    else         x = c - d;
+
+    return x;
+  }
+
+};  // a_x_plus_c_mod_m<,,,false>
+
+// ======================================================================
+
+#endif  // _A_X_PLUS_C_MOD_M
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

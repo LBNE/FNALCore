@@ -1,0 +1,266 @@
+#ifndef DETAIL_LINEAR_CONGRUENTIAL_ENGINE
+#define DETAIL_LINEAR_CONGRUENTIAL_ENGINE
+
+// ======================================================================
+//
+// linear_congruential_engine:  per C++11 26.5.3.1 [rand.eng.lcong]
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+#include "cpp0x/cstdint"
+#include "cpp0x/detail/a_x_plus_c_mod_m"
+#include "cpp0x/detail/is_sseq"
+#include "cpp0x/detail/log2"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+
+// ======================================================================
+
+namespace std {
+
+  template< class UInt, UInt a, UInt c, UInt m >
+    class linear_congruential_engine;
+
+  template< class UInt, UInt a, UInt c, UInt m, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>                  &
+                , linear_congruential_engine<UInt,a,c,m> const &
+                );
+
+  template< class UInt, UInt a, UInt c, UInt m, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>            &
+                , linear_congruential_engine<UInt,a,c,m> &
+                );
+
+}
+
+// ======================================================================
+
+template< class UInt, UInt a, UInt c, UInt m >
+  class std::linear_congruential_engine
+{
+  // useful constants:
+  static  constexpr UInt
+    _zero_ = 0u
+  , _one_  = 1u
+  , _min_  = c == _zero_ ? _one_ : _zero_
+  , _max_  = m - _one_
+  ;
+
+  // validate parameters:
+  STATIC_ASSERT( is_unsigned<UInt>::value
+               , "std::linear_congruential_engine<> requires an unsigned type"
+               );
+  STATIC_ASSERT( m == _zero_ || a < m
+               , "std::linear_congruential_engine<> requires a < m"
+               );
+  STATIC_ASSERT( m == _zero_ || c < m
+               , "std::linear_congruential_engine<> requires c < m"
+               );
+  STATIC_ASSERT( _min_ < _max_
+               , "std::linear_congruential_engine<> requires min < max"
+               );
+
+private:
+  UInt                             x;
+  _::a_x_plus_c_mod_m<UInt,a,c,m>  next;
+
+public:
+
+  // types:
+  typedef  UInt  result_type;
+
+  // engine characteristics:
+  static  constexpr result_type  multiplier   = a;
+  static  constexpr result_type  increment    = c;
+  static  constexpr result_type  modulus      = m;
+  static  constexpr result_type  min          = _min_;
+  static  constexpr result_type  max          = _max_;
+  static  constexpr result_type  default_seed = _one_;
+
+  // constructors and seeding functions:
+  explicit
+    linear_congruential_engine( result_type = default_seed );
+  template< class Sseq >
+  explicit
+    linear_congruential_engine( Sseq &
+                              , typename
+                                enable_if< _::is_sseq< Sseq
+                                                     , linear_congruential_engine
+                                                     >::value
+                                         >::type * = nullptr
+                              );
+  void
+    seed( result_type = default_seed );
+  template< class Sseq >
+  typename enable_if< _::is_sseq< Sseq
+                                , linear_congruential_engine
+                                >::value
+                    >::type
+    seed( Sseq & );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  result_type
+    operator () ( );
+  void
+    discard( unsigned long long );
+
+  // equality comparisons:
+  bool
+    operator == ( linear_congruential_engine const & ) const;
+  bool
+    operator != ( linear_congruential_engine const & ) const;
+
+  // i/o:
+  template< class U, U A, U C, U M, class charT, class traits >
+  friend basic_ostream<charT, traits> &
+    operator << ( basic_ostream<charT, traits>              &
+                , linear_congruential_engine<U,A,C,M> const &
+                );
+  template< class U, U A, U C, U M, class charT, class traits >
+  friend basic_istream<charT, traits> &
+    operator >> ( basic_istream<charT, traits>        &
+                , linear_congruential_engine<U,A,C,M> &
+                );
+
+};  // linear_congruential_engine<>
+
+// ----------------------------------------------------------------------
+// constructors and seeding functions:
+
+template< class UInt, UInt a, UInt c, UInt m >
+  std::linear_congruential_engine<UInt,a,c,m>::
+  linear_congruential_engine( result_type s )
+{
+  seed(s);
+}
+
+template< class UInt, UInt a, UInt c, UInt m >
+template< class Sseq >
+  std::linear_congruential_engine<UInt,a,c,m>::
+  linear_congruential_engine( Sseq & q
+                            , typename
+                              enable_if< _::is_sseq< Sseq
+                                                   , linear_congruential_engine
+                                                   >::value
+                                       >::type *
+                            )
+{
+  seed(q);
+}
+
+template< class UInt, UInt a, UInt c, UInt m >
+void
+  std::linear_congruential_engine<UInt,a,c,m>::
+  seed( result_type s )
+{
+  x = (next(c) == _zero_ && next(s) == _zero_) ? _one_ : (s % m);
+}
+
+template< class UInt, UInt a, UInt c, UInt m >
+template< class Sseq >
+typename std::enable_if< std::_::is_sseq< Sseq
+                                        , std::linear_congruential_engine<UInt,a,c,m>
+                                        >::value
+                       >::type
+  std::linear_congruential_engine<UInt,a,c,m>::
+  seed( Sseq & q )
+{
+  static  constexpr size_t d   = numeric_limits<UInt>::digits
+                         , lg2 = m == _zero_ ? d : _::log2<UInt,m>::value
+                         , k   = (lg2 + 31u) / 32u
+                         ;
+
+  uint32_t arr[k+3];  q.generate(arr+0, arr+k+3);
+  UInt S = arr[3];
+  switch( k ) {
+    default:  throw range_error("linear_congruential_engine<>: word size > 128 bits!");
+    case 4u:  S += arr[6] << (3u * 32u);
+    case 3u:  S += arr[5] << (2u * 32u);
+    case 2u:  S += arr[4] << (1u * 32u);
+    case 1u:  ;
+  }
+  seed(S);
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class UInt, UInt a, UInt c, UInt m >
+UInt
+  std::linear_congruential_engine<UInt,a,c,m>::
+  operator () ( )
+{
+  return x = next(x);
+}
+
+template< class UInt, UInt a, UInt c, UInt m >
+void
+  std::linear_congruential_engine<UInt,a,c,m>::
+  discard( unsigned long long z )
+{
+  for(  ; z != 0uLL; --z )
+    (*this)( );
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class UInt, UInt a, UInt c, UInt m >
+bool
+  std::linear_congruential_engine<UInt,a,c,m>::
+  operator == ( linear_congruential_engine const & other ) const
+{
+  return x == other.x;
+}
+
+template< class UInt, UInt a, UInt c, UInt m >
+bool
+  std::linear_congruential_engine<UInt,a,c,m>::
+  operator != ( linear_congruential_engine const & other ) const
+{
+  return ! (*this == other );
+}
+
+// ----------------------------------------------------------------------
+// i/o:
+
+template< class UInt, UInt a, UInt c, UInt m, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( std::basic_ostream<charT,traits>                  & os
+                   , std::linear_congruential_engine<UInt,a,c,m> const & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  return os << e.x;
+}
+
+template< class UInt, UInt a, UInt c, UInt m, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>            & is
+                   , linear_congruential_engine<UInt,a,c,m> & e
+                   )
+{
+  _::stream_state_guard<charT,traits> g(is);
+
+  UInt t;
+  is >> t;
+  if( ! is.fail() )
+    e.x = t;
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_LINEAR_CONGRUENTIAL_ENGINE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
