@@ -48,18 +48,6 @@ set_target_properties(FNALCore
     DEBUG_POSTFIX "${FNALCore_DEBUG_POSTFIX}"
   )
 
-# - Set custom properties
-# Just an example - but should mean consuming targets need same property
-# set
-set_property(TARGET FNALCore
-  APPEND PROPERTY
-  COMPATIBLE_INTERFACE_STRING CXX_STANDARD
-  )
-
-set_property(TARGET FNALCore
-  PROPERTY INTERFACE_CXX_STANDARD 11
-  )
-
 # - Describe link interface
 # Know that filesystem/system are private, needs investigation on the
 # others
