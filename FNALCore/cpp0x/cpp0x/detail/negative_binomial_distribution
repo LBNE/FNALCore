@@ -1,0 +1,327 @@
+#ifndef DETAIL_NEGATIVE_BINOMIAL_DISTRIBUTION
+#define DETAIL_NEGATIVE_BINOMIAL_DISTRIBUTION
+
+// ======================================================================
+//
+// negative_binomial_distribution: per C++11 26.5.8.3.4 [rand.dist.bern.negbin]
+//
+// Produce integer values 0 <= i
+//
+// ======================================================================
+
+#include "cpp0x/detail/bernoulli_distribution"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Int = int >
+    class negative_binomial_distribution;
+
+  template< class Int, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>               &
+                , negative_binomial_distribution<Int> const &
+                );
+
+  template< class Int, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>          &
+                , negative_binomial_distribution<Int>  &
+                );
+
+}
+
+// ======================================================================
+
+template< class Int >
+  class std::negative_binomial_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_integral<Int>::value
+               , "std::negative_binomial_distribution<> requires an integral type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Int      result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            negative_binomial_distribution( );
+  explicit  negative_binomial_distribution( Int );
+            negative_binomial_distribution( Int, double );
+  explicit  negative_binomial_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  Int          k    ( ) const  { return parm.k(); }
+  double       p    ( ) const  { return parm.p(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return Int(); }
+  result_type  max  ( ) const  { return numeric_limits<Int>::max(); }
+
+  // equality comparisons:
+  bool  operator == ( negative_binomial_distribution const & ) const;
+  bool  operator != ( negative_binomial_distribution const & ) const;
+
+};  // negative_binomial_distribution<>
+
+// ======================================================================
+
+template< class Int >
+  class std::negative_binomial_distribution<Int>::param_t
+{
+  friend  class negative_binomial_distribution<Int>;
+
+private:
+  Int     k_;
+  double  p_;
+
+  // helper functions:
+  template< class URNG >
+    Int  generate( URNG & ) const;
+  static range_error bad_k;
+  static range_error bad_p;
+
+public:
+
+  // types:
+  typedef  Int                                  result_type;
+  typedef  negative_binomial_distribution<Int>  distribution_type;
+
+  // constructors:
+  explicit  param_t( result_type = 1, double = 0.5 );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  result_type  k( ) const  { return k_; }
+  double       p( ) const  { return p_; }
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+  // statistics:
+  _::stats  expected( ) const;
+
+};  // negative_binomial_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Int >
+  std::negative_binomial_distribution<Int>::param_t::
+  param_t( result_type k, double p )
+: k_( result_type(0) < k  ? k : throw bad_k )
+, p_( 0.0 < p && p <= 1.0 ? p : throw bad_p )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+bool
+  std::negative_binomial_distribution<Int>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return k_ == other.k_
+      && p_ == other.p_;
+}
+
+template< class Int >
+bool
+  std::negative_binomial_distribution<Int>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+template< class Int >
+std::_::stats
+  std::negative_binomial_distribution<Int>::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  k        = k_
+           ,  p        = p_
+           ,  mean     = k * (1.0L - p) / p
+           ,  variance = mean / p
+           ,  skew     = (2.0L - p) / sqrt(k * (1.0L - p))
+           ,  kurtosis = 6.0L / k + p * p / (k * (1.0L - p));
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Int >
+template< class URNG >
+Int
+  std::negative_binomial_distribution<Int>::param_t::
+  generate( URNG & u ) const
+{
+  bernoulli_distribution b_dist(p_);
+
+  Int s = Int()
+    , f = Int();
+
+  while( s < k_ )
+    b_dist(u) ? ++s : ++f;
+
+  return f;
+}
+
+template< class Int >
+std::range_error
+  std::negative_binomial_distribution<Int>::param_t::
+  bad_k("std::negative_binomial_distribution<> requires 0 < k");
+
+template< class Int >
+std::range_error
+  std::negative_binomial_distribution<Int>::param_t::
+  bad_p("std::negative_binomial_distribution<> requires 0 < p <= 1");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Int >
+  std::negative_binomial_distribution<Int>::
+  negative_binomial_distribution( )
+: parm( )
+{ }
+
+template< class Int >
+  std::negative_binomial_distribution<Int>::
+  negative_binomial_distribution( result_type k )
+: parm( k )
+{ }
+
+template< class Int >
+  std::negative_binomial_distribution<Int>::
+  negative_binomial_distribution( result_type k, double p )
+: parm( k, p )
+{ }
+
+template< class Int >
+  std::negative_binomial_distribution<Int>::
+  negative_binomial_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Int >
+void
+  std::negative_binomial_distribution<Int>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::negative_binomial_distribution<Int>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Int >
+template< class URNG >
+inline  Int
+  std::negative_binomial_distribution<Int>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Int >
+inline  bool
+  std::negative_binomial_distribution<Int>::
+  operator == ( negative_binomial_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Int >
+bool
+  std::negative_binomial_distribution<Int>::
+  operator != ( negative_binomial_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Int, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>               & os
+                   , negative_binomial_distribution<Int> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  return os << d.k() << sp << d.p();
+}
+
+template< class Int, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>          & is
+                   , negative_binomial_distribution<Int>  & d
+                   )
+{
+  typedef  negative_binomial_distribution<Int>  dist_t;
+  typedef  typename dist_t::result_type         result_t;
+  typedef  typename dist_t::param_type          param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  result_t  k;
+  double    p;
+  is >> k >> p;
+  if( ! is.fail() )
+    d.param( param_t(k, p) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_NEGATIVE_BINOMIAL_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

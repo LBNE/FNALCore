@@ -1,0 +1,55 @@
+#ifndef DETAIL_POW2
+#define DETAIL_POW2
+
+// ======================================================================
+//
+// pow2: compile-time power of two
+//
+// ======================================================================
+
+#include "cpp0x/cstddef"
+#include <limits>
+
+namespace std {
+namespace _ {
+
+  template< class UInt, std::size_t n
+          , bool = n >= std::size_t(std::numeric_limits<UInt>::digits)
+          >
+    struct pow2;
+  template< class UInt, std::size_t n >
+    struct pow2<UInt,n,true>;
+
+  template< class UInt, std::size_t n >
+    struct pow2m1;
+
+}  // std::_
+}  // std
+
+// ----------------------------------------------------------------------
+
+template< class UInt, std::size_t n, bool >
+  struct std::_::pow2
+{
+  static  constexpr UInt  value = UInt(1u) << n;
+};
+
+template< class UInt, std::size_t n >
+  struct std::_::pow2<UInt,n,true>
+{
+  static  constexpr UInt  value = 0u;
+};
+
+// ----------------------------------------------------------------------
+
+template< class UInt, std::size_t n >
+  struct std::_::pow2m1
+{
+  static  constexpr UInt  value = pow2<UInt,n>::value - UInt(1u);
+};
+
+// ======================================================================
+
+#endif  // DETAIL_POW2
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

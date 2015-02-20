@@ -1,0 +1,308 @@
+#ifndef DETAIL_STUDENT_T_DISTRIBUTION
+#define DETAIL_STUDENT_T_DISTRIBUTION
+
+// ======================================================================
+//
+// student_t_distribution: per C++11 26.5.8.5.6 [rand.dist.norm.t]
+//
+// Produce random numbers x, 0 <= x
+//
+// ======================================================================
+
+#include "cpp0x/cmath"
+#include "cpp0x/detail/gamma_distribution"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stats"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Real = double >
+    class student_t_distribution;
+
+  template< class Real, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>        &
+                , student_t_distribution<Real> const &
+                );
+
+  template< class Real, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits>  &
+                , student_t_distribution<Real> &
+                );
+
+}
+
+// ======================================================================
+
+template< class Real >
+  class std::student_t_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_floating_point<Real>::value
+               , "std::student_t_distribution<> requires a floating-point type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Real     result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            student_t_distribution( );
+  explicit  student_t_distribution( Real );
+  explicit  student_t_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  Real         n    ( ) const  { return parm.n(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return Real(); }
+  result_type  max  ( ) const  { return numeric_limits<Real>::infinity(); }
+
+  // equality comparisons:
+  bool  operator == ( student_t_distribution const & ) const;
+  bool  operator != ( student_t_distribution const & ) const;
+
+};  // student_t_distribution<>
+
+// ======================================================================
+
+template< class Real >
+  class std::student_t_distribution<Real>::param_t
+{
+  friend  class student_t_distribution<Real>;
+
+  typedef  typename  conditional< sizeof(Real) < sizeof(double)
+                                , double
+                                , Real
+                                >::type
+           work_t;
+
+private:
+  Real  n_;
+
+  // helper functions:
+  template< class URNG >
+    Real  generate( URNG & ) const;
+  static range_error bad_n;
+
+public:
+
+  // types:
+  typedef  Real                          result_type;
+  typedef  student_t_distribution<Real>  distribution_type;
+
+  // constructors:
+  explicit  param_t( Real = Real(1.0) );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  Real  n( ) const  { return n_; }
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+  // statistics:
+  _::stats  expected( ) const;
+
+};  // student_t_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Real >
+  std::student_t_distribution<Real>::param_t::
+  param_t( Real n )
+: n_( Real() < n ? n : throw bad_n )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Real >
+bool
+  std::student_t_distribution<Real>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return n_ == other.n_;
+}
+
+template< class Real >
+bool
+  std::student_t_distribution<Real>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// statistics:
+
+template< class Real >
+std::_::stats
+  std::student_t_distribution<Real>::param_t::
+  expected( ) const
+{
+  typedef  long double  ldbl;
+  ldbl const  n        = n_
+           ,  mean     = 0.0L
+           ,  variance = n / (n - 2.0L)
+           ,  skew     = 0.0L
+           ,  kurtosis = 6.0L / (n - 4.0L);
+  return _::stats(mean, variance, skew, kurtosis);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Real >
+template< class URNG >
+Real
+  std::student_t_distribution<Real>::param_t::
+  generate( URNG & u ) const
+{
+  work_t  two(2.0);
+  gamma_distribution<work_t> gamma_d(work_t(n_)/two, two);
+  return gamma_d(u) * sqrt(n_ / gamma_d(u));
+}
+
+template< class Real >
+std::range_error
+  std::student_t_distribution<Real>::param_t::
+  bad_n("std::student_t_distribution<> requires 0 < n");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Real >
+  std::student_t_distribution<Real>::
+  student_t_distribution( )
+: parm( )
+{ }
+
+template< class Real >
+  std::student_t_distribution<Real>::
+  student_t_distribution( Real m )
+: parm( m )
+{ }
+
+template< class Real >
+  std::student_t_distribution<Real>::
+  student_t_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Real >
+void
+  std::student_t_distribution<Real>::
+  reset( )
+{ }
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Real >
+template< class URNG >
+inline  Real
+  std::student_t_distribution<Real>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Real >
+template< class URNG >
+inline  Real
+  std::student_t_distribution<Real>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Real >
+inline  bool
+  std::student_t_distribution<Real>::
+  operator == ( student_t_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Real >
+bool
+  std::student_t_distribution<Real>::
+  operator != ( student_t_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Real, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>        & os
+                   , student_t_distribution<Real> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+
+  return os << d.n();
+}
+
+template< class Real, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits>  & is
+                   , student_t_distribution<Real> & d
+                   )
+{
+  typedef  student_t_distribution<Real>  dist_t;
+  typedef  typename dist_t::result_type  result_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  result_t  n;
+  is >> n;
+  if( ! is.fail() )
+    d.param( param_t(n) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_STUDENT_T_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

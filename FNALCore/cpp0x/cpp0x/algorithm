@@ -1,0 +1,373 @@
+#ifndef CPP0X_ALGORITHM
+#define CPP0X_ALGORITHM
+
+// ======================================================================
+//
+// algorithm - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+#include "cpp0x/iterator"
+#include "cpp0x/utility"
+#include <algorithm>
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_ALL_OF
+
+#if defined(CPP0X_HAS_ALGORITHM_ALL_OF)
+
+#else
+  namespace std  {
+    template< class InIter, class Pred >
+    bool
+      all_of( InIter b, InIter const e, Pred const p )
+    {
+      for(  ;  b != e;  ++b )
+        if( ! p(*b) )
+          return false;
+      return true;
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_ANY_OF
+
+#if defined(CPP0X_HAS_ALGORITHM_ANY_OF)
+
+#else
+  namespace std  {
+    template< class InIter, class Pred >
+    bool
+      any_of( InIter b, InIter const e, Pred const p )
+    {
+      for(  ;  b != e;  ++b )
+        if( p(*b) )
+          return true;
+      return false;
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_NONE_OF
+
+#if defined(CPP0X_HAS_ALGORITHM_NONE_OF)
+
+#else
+  namespace std  {
+    template< class InIter, class Pred >
+    bool
+      none_of( InIter b, InIter const e, Pred const p )
+    {
+      for(  ;  b != e;  ++b )
+        if( p(*b) )
+          return false;
+      return true;
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_MIN_MAX
+
+#if defined(CPP0X_HAS_ALGORITHM_MIN_MAX)
+
+#else
+  namespace std  {
+
+    #if 0
+    template< class FwdIter >
+    FwdIter
+      min_element( FwdIter b, FwdIter const e )
+    {
+      if( b == e )
+        return e;
+      FwdIter result = b;
+      while( ++b != e )
+        if( *b < *result )
+          result = b;
+      return result;
+    }
+
+    template< class FwdIter, class Compare >
+    FwdIter
+      min_element( FwdIter b, FwdIter const e
+                 , Compare const lt
+                 )
+    {
+      if( b == e )
+        return e;
+      FwdIter result = b;
+      while( ++b != e )
+        if( lt( *b, *result ) )
+          result = b;
+      return result;
+    }
+
+    template< class FwdIter >
+    FwdIter
+      max_element( FwdIter b, FwdIter const e )
+    {
+      if( b == e )
+        return e;
+      FwdIter result = b;
+      while( ++b != e )
+        if( *result < *b )
+          result = b;
+      return result;
+    }
+
+    template< class FwdIter, class Compare >
+    FwdIter
+      max_element( FwdIter b, FwdIter const e
+                 , Compare const lt
+                 )
+    {
+      if( b == e )
+        return e;
+      FwdIter result = b;
+      while( ++b != e )
+        if( lt( *result, *b ) )
+          result = b;
+      return result;
+    }
+    #endif
+
+    namespace {
+      template< class FwdIter >
+      inline bool
+        _hop( FwdIter & i, FwdIter const j, FwdIter const e )
+      { return i = j, ++i != e; }
+
+      template< class FwdIter >
+      void
+        _update_mM( FwdIter const m, FwdIter & min_so_far
+                  , FwdIter const M, FwdIter & max_so_far )
+      { if( *m < *min_so_far )  min_so_far = m;
+        if( *max_so_far < *M )  max_so_far = M;
+      }
+
+      template< class FwdIter, class Compare >
+      void
+        _update_mM( FwdIter const m, FwdIter & min_so_far
+                  , FwdIter const M, FwdIter & max_so_far
+                  , Compare const lt )
+      { if( lt(*m, *min_so_far) )  min_so_far = m;
+        if( lt(*max_so_far, *M) )  max_so_far = M;
+      }
+    }
+
+    template< class FwdIter >
+    pair<FwdIter, FwdIter>
+      minmax_element( FwdIter b, FwdIter const e )
+    {
+      pair<FwdIter,FwdIter> r(b, b);
+      if( b != e )  {
+        for( FwdIter n = b; _hop(b,n,e) && _hop(n,b,e);  )
+          if( *b < *n ) _update_mM(b, r.first, n, r.second );
+          else          _update_mM(n, r.first, b, r.second );
+        if( b != e )
+          _update_mM(b, r.first, b, r.second );
+      }
+      return r;
+    }
+
+    template< class FwdIter, class Compare >
+    pair<FwdIter, FwdIter>
+      minmax_element( FwdIter b, FwdIter const e, Compare const lt )
+    {
+      pair<FwdIter,FwdIter> r(b, b);
+      if( b != e )  {
+        for( FwdIter n = b; _hop(b,n,e) && _hop(n,b,e);  )
+          if( lt(*b, *n) ) _update_mM(b, r.first, n, r.second, lt );
+          else             _update_mM(n, r.first, b, r.second, lt );
+        if( b != e )
+          _update_mM(b, r.first, b, r.second );
+      }
+      return r;
+    }
+
+  }  // std
+
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_IS_SORTED
+
+#if defined(CPP0X_HAS_ALGORITHM_IS_SORTED)
+
+#else
+  namespace std  {
+
+    template< class FwdIter >
+    FwdIter
+      is_sorted_until( FwdIter b, FwdIter const e )
+    {
+      if( b != e )
+        for( FwdIter prev = b;  ++b != e;  prev = b )
+          if( *b < *prev )
+            return b;
+      return e;
+    }
+
+    template< class FwdIter, class Compare >
+    FwdIter
+      is_sorted_until( FwdIter b, FwdIter const e, Compare const lt )
+    {
+      if( b != e )
+        for( FwdIter prev = b;  ++b != e;  prev = b )
+          if( lt(*b, *prev) )
+            return b;
+      return e;
+    }
+
+    template< class FwdIter >
+    inline bool
+      is_sorted( FwdIter b, FwdIter const e )
+    { return is_sorted_until(b, e) == e; }
+
+    template< class FwdIter, class Compare >
+    inline bool
+      is_sorted( FwdIter b, FwdIter const e, Compare const lt )
+    { return is_sorted_until(b, e, lt) == e; }
+
+  }  // std
+
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_FIND_IF_NOT
+
+#if defined(CPP0X_HAS_ALGORITHM_FIND_IF_NOT)
+
+#else
+  namespace std  {
+    template< class InIter, class Pred >
+    InIter
+      find_if_not( InIter b, InIter const e, Pred const p )
+    {
+      for(  ;  b != e  &&  p(*b);  ++b )
+        ;
+      return b;
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_COPY_N
+
+#if defined(CPP0X_HAS_ALGORITHM_COPY_N)
+
+#else
+  namespace std  {
+    template< class InIter, class Sz, class OutIter >
+    OutIter
+      copy_n( InIter src, Sz n, OutIter dest )
+    {
+      if( n > 0 )
+        while( *dest = *src, --n > 0 )
+          *++dest = *++src;
+      return ++dest;
+    }
+
+    template< class InIter, class Sz, class FwdIter >
+    FwdIter
+      uninitialized_copy_n( InIter src, Sz n, FwdIter dest )
+    {
+      typedef  typename iterator_traits<FwdIter>::value_type  value_t;
+
+      if( n > 0 )
+        while( new (static_cast<void*>(&*dest)) value_t(*src), --n > 0 )
+          new (static_cast<void*>(&*++dest)) value_t(*++src);
+      return ++dest;
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_SHUFFLE
+
+#if defined(CPP0X_HAS_ALGORITHM_SHUFFLE)
+
+#else
+  #include "cpp0x/detail/uniform_int_distribution"
+  namespace std  {
+    template< class RAIter, class URNG >
+    void
+#ifdef CPP0X_HAS_RVALUE_REFERENCES
+      shuffle( RAIter b, RAIter const e, URNG && g )
+#else
+      shuffle( RAIter b, RAIter const e, URNG & g )
+#endif
+    {
+      typedef  typename iterator_traits<RAIter>::difference_type  diff_t;
+      typedef  uniform_int_distribution<diff_t>                   dist_t;
+      typedef  typename dist_t::param_type                        param_t;
+
+      dist_t  d;
+      for( diff_t n = e - b; n > 1; --n, ++b )  {
+        param_t const  p(0, n-1);
+        diff_t  const  i = d(g, p);
+        iter_swap(b, b+i);
+      }
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_IS_PARTITIONED
+
+#if defined(CPP0X_HAS_ALGORITHM_IS_PARTITIONED)
+
+#else
+  namespace std  {
+    template< class InIter, class Pred >
+    bool
+      is_partitioned( InIter b, InIter const e, Pred const p )
+    {
+      for(  ; b != e && p(*b); ++b )
+        ;
+      for(  ; b != e && !p(*b); ++b )
+        ;
+      return b == e;
+    }
+  }  // std
+#endif
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ALGORITHM_PARTITION_POINT
+
+#if defined(CPP0X_HAS_ALGORITHM_PARTITION_POINT)
+
+#else
+  namespace std  {
+    template< class FwdIter, class Pred >
+    FwdIter
+      partition_point( FwdIter b, FwdIter e, Pred const p )
+    {
+      typedef  typename iterator_traits<FwdIter>::difference_type  diff_t;
+      for( diff_t len = distance(b, e);  len != 0;  )  {
+        diff_t  half = len / 2;
+        FwdIter mid  = b; advance(mid, half);
+        if( p(*mid) )  b = ++mid, len -= half + 1;
+        else           len = half;
+      }
+      return b;
+    }
+  }  // std
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
