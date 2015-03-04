@@ -46,19 +46,22 @@ Installation
 Requirements
 ------------
 - [CMake](http://www.cmake.org) 2.8.12 or above
-- [C++0X/11](http://isocpp.org) compliant compiler
-  - The [CheckCXX11Features](https://github.com/drbenmorgan/CheckCXX11Features) package is used to check for known C++0X/11 features.
+- [C++11/14](http://isocpp.org) compliant compiler
+  - The [CheckCXX11Features](https://github.com/drbenmorgan/CheckCXX11Features) package is used to check for known C++0X/11 features and compiler
+    flags.
   - The `cpp0x` module provides minimal implementations of some
     C++11 features, but is not complete.
   - Boost implementations are used where neccessary.
   - Features that the compiler/standard library *must* provide include
     (not complete as yet):
     - `emplace` member functions of `std::` collections.
+  - Note that *by default* FNALCore is built with the best available
+    standard, so C++1y/14 if available, then C++11, then C++0x.
 - [Boost](http://www.boost.org) 1.55 or higher, with `filesystem`,
   `system`, `regex` and `thread` libraries compiled against C++11.
   If you want to run FNALCore's unit tests, the Boost `unit_test` library
   is also needed.
-  - NB: the C++11 compatibility of the found Boost is *not* checked, but
+  - NB: the C++11/14 compatibility of the found Boost is *not* checked, but
     an ABI incompatible Boost should cause the unit tests to fail. It
     should be noted that as a robust ABI checks are tricky to implement,
     it is up to *you*, not the buildsystem, to point to the right Boost.
@@ -66,6 +69,7 @@ Requirements
   in `fhiclcpp`.
 - [Doxygen](http://www.doxygen.org) 1.8 or higher for building FNALCore's
   documentation.
+
 
 How to Install
 --------------
@@ -111,6 +115,10 @@ CMAKE_INSTALL_PREFIX/
 |  +- libFNALCore.so
 |  +- cmake/
 |     +- FNALCore-<VERSION>
+|     +- cpp0x-<cpp0xVERSION>
+|     +- cetlib-<cetlibVERSION>
+|     +- fhiclcpp-<fhiclcppVERSION>
+|     +- messagefacility-<messagefacilityVERSION>
 +- share/
    +- doc/
       +- FNALCore/
@@ -168,6 +176,39 @@ in a non-relocatable path being encoded in the FNALCore support files.
 This can be resolved when CMake's `FindBoost` module supports imported
 targets, or a wrapper can be written.
 
+
+Adapting Existing CMake Build Scripts
+-------------------------------------
+If your CMake build scripts use `find_package` calls to locate the
+old-style separate components, e.g.
+
+```cmake
+find_package(cetlib X.Y.Z REQUIRED)
+```
+
+then no changes should be needed. FNALCore supplies adaptor modules to
+mimic the separate packages (with the bonus that all inter-package
+dependencies are automatically handled as soon as the first package is
+found). Package location is handled identically as for FNALCore, so if
+you have installed FNALCore to a non standard location, you may need to
+set `CMAKE_PREFIX_PATH`, or `<component>_DIR` (e.g. `cetlib_DIR`).
+
+Each modular config provides canonical CMake variables for header paths
+and libraries to be linked to. For example
+simp
+
+```cmake
+include_directories(${cetlib_INCLUDE_DIRS})
+
+add_executable(foo foo.cc)
+target_link_libraries(foo ${cetlib_LIBRARIES})
+```
+
+Note that this style is provided only as an assistance step in migration
+to full FNALCore. The adaption scripts simply provide aliases to the
+underlying FNALCore library and headers.
+
+
 Header Paths and Adapting Existing Code
 ---------------------------------------
 Provided you have the `<CMAKE_INSTALL_PREFIX>/include/FNALCore` directory
@@ -184,6 +225,7 @@ Any existing code you have written using separately compiled cpp0x,
 cetlib etc is API compatible with FNALCore. The only change that is
 required is to use `find_package(FNALCore)` and to link any binary against
 the FNALCore library instead of the separate cpp0x, cetlib etc libraries.
+
 
 Documentation
 -------------
