@@ -208,11 +208,16 @@ install(TARGETS
 #-----------------------------------------------------------------------
 # Annnnd.... We have to build the test executable that for some surely
 # very good reason resides in the library sources...
-if(FNALCore_ENABLE_TESTING)
-  add_executable(ELdestinationTester
-    ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.h
-    ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.cc
-    )
-  target_link_libraries(ELdestinationTester FNALCore)
-endif()
+# Except as per Redmine 8020, it's an actual application, so better
+# install and export it!!
+add_executable(ELdestinationTester
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.cc
+  )
+target_link_libraries(ELdestinationTester FNALCore)
+install(TARGETS ELdestinationTester
+  EXPORT FNALCoreExports
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT Development
+  )
 
