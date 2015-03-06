@@ -149,6 +149,36 @@ add_library(obj-messagefacility OBJECT
   ${MessageFacility_Utilities_SOURCES}
   )
 
+# - New plugins. Need to link to FNALCore eventually
+# There is an oddity here - there is (surprise, surprise...) yet
+# another library "MF_FileFormat", but it lives under the mfplugins
+# namespace and only appears used by "file_mfPlugin" and "file_mfStatsPlugin"
+# Not clear if this is private functionality of MessageFacility, or intended
+# for use by other plugins (header does not appear to be installed, but
+# with cetbuildtools who knows).
+# - TEMP: Just build the core ones
+add_library(messagefacility_cout_mfPlugin SHARED
+  ${messagefacility_INCLUDE_DIR}/MessageService/plugins/cout_mfPlugin.cc)
+target_link_libraries(messagefacility_cout_mfPlugin FNALCore)
+
+add_library(messagefacility_cerr_mfPlugin SHARED
+  ${messagefacility_INCLUDE_DIR}/MessageService/plugins/cerr_mfPlugin.cc)
+target_link_libraries(messagefacility_cerr_mfPlugin FNALCore)
+
+add_library(messagefacility_syslog_mfPlugin SHARED
+  ${messagefacility_INCLUDE_DIR}/MessageService/plugins/syslog_mfPlugin.cc)
+target_link_libraries(messagefacility_syslog_mfPlugin FNALCore)
+
+add_library(messagefacility_cout_mfStatsPlugin SHARED
+  ${messagefacility_INCLUDE_DIR}/MessageService/plugins/cout_mfStatsPlugin.cc)
+target_link_libraries(messagefacility_cout_mfStatsPlugin FNALCore)
+
+add_library(messagefacility_cerr_mfStatsPlugin SHARED
+  ${messagefacility_INCLUDE_DIR}/MessageService/plugins/cerr_mfStatsPlugin.cc)
+target_link_libraries(messagefacility_cerr_mfStatsPlugin FNALCore)
+
+
+
 # TEMP local install of headers
 install(FILES ${MessageFacility_Utilities_HEADERS}
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/messagefacility/Utilities
@@ -160,6 +190,34 @@ install(FILES ${MessageService_HEADERS}
   )
 install(FILES ${MessageLogger_HEADERS}
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/messagefacility/MessageLogger
+  COMPONENT Development
+  )
+
+# Also install plugins, though we don't need to export these because
+# they're not designed to be linked to
+install(TARGETS
+  messagefacility_cout_mfPlugin
+  messagefacility_cerr_mfPlugin
+  messagefacility_syslog_mfPlugin
+  messagefacility_cout_mfStatsPlugin
+  messagefacility_cerr_mfStatsPlugin
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  COMPONENT Runtime
+  )
+
+#-----------------------------------------------------------------------
+# Annnnd.... We have to build the test executable that for some surely
+# very good reason resides in the library sources...
+# Except as per Redmine 8020, it's an actual application, so better
+# install and export it!!
+add_executable(ELdestinationTester
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.h
+  ${messagefacility_INCLUDE_DIR}/MessageService/ELdestinationTester.cc
+  )
+target_link_libraries(ELdestinationTester FNALCore)
+install(TARGETS ELdestinationTester
+  EXPORT FNALCoreExports
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Development
   )
 

@@ -40,6 +40,15 @@ set(FNALCore_SOVERSION "0.1.0")
 set(FNALCore_DEBUG_POSTFIX "d")
 
 #-----------------------------------------------------------------------
+# Submodule versions - by hand because these can only be derived
+# from UPS files...
+#
+set(cpp0x_VERSION "1.4.9")
+set(cetlib_VERSION "1.9.0")
+set(fhiclcpp_VERSION "3.3.0")
+set(messagefacility_VERSION "1.14.0")
+
+#-----------------------------------------------------------------------
 # Standard and Custom CMake Modules
 #
 list(INSERT CMAKE_MODULE_PATH 0
@@ -143,6 +152,7 @@ endif()
 #-----------------------------------------------------------------------
 # Install support files
 #
+# - FNALCore
 configure_package_config_file(
   cmake/FNALCoreConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/FNALCoreConfig.cmake
@@ -163,6 +173,25 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/FNALCoreConfigVersion.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FNALCore-${FNALCore_VERSION}
   )
+
+# - Submodule aliasing
+foreach(_sm cpp0x cetlib fhiclcpp messagefacility)
+  configure_file(
+    cmake/${_sm}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${_sm}Config.cmake
+    @ONLY
+    )
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${_sm}ConfigVersion.cmake
+    VERSION ${${_sm}_VERSION}
+    COMPATIBILITY AnyNewerVersion
+    )
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/${_sm}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_sm}ConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${_sm}-${${_sm}_VERSION}
+    )
+endforeach()
 
 #-----------------------------------------------------------------------
 # Package
