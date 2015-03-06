@@ -129,13 +129,18 @@ namespace mfplugins {
 // makePlugin function
 //
 //======================================================================
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 
 extern "C" {
 
-  auto makePlugin( const std::string&,
+  std::unique_ptr<mfplugins::ELsyslog> makePlugin( const std::string&,
                    const fhicl::ParameterSet& pset) {
 
-    return std::make_unique<mfplugins::ELsyslog>( pset );
+    return ::make_unique<mfplugins::ELsyslog>( pset );
 
   }
 

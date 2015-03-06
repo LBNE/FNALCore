@@ -8,13 +8,18 @@
 #include <memory>
 
 using mf::service::ELstatistics;
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 
 extern "C" {
 
-  auto makePlugin( const std::string&,
+  std::unique_ptr<ELstatistics> makePlugin( const std::string&,
                    const fhicl::ParameterSet& pset) {
 
-    return std::make_unique<ELstatistics>( pset, std::cerr );
+    return ::make_unique<ELstatistics>( pset, std::cerr );
 
   }
 
