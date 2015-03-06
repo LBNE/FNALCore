@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(put) {
   BOOST_CHECK_EQUAL(pset.get<std::string>("putTest"), sval);
   BOOST_CHECK_EXCEPTION(pset.put("putTest", sval2),                     \
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
@@ -179,13 +179,13 @@ BOOST_AUTO_TEST_CASE(put_or_replace_compatible_atom) {
   BOOST_CHECK_EQUAL(pset.get<std::string>("putOrReplaceCompatibleTest"), sval2);
   BOOST_CHECK_EXCEPTION(pset.put_or_replace_compatible("putOrReplaceCompatibleTest", vval),
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
   BOOST_CHECK_EXCEPTION(pset.put_or_replace_compatible("putOrReplaceCompatibleTest", psval),
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
@@ -206,13 +206,13 @@ BOOST_AUTO_TEST_CASE(put_or_replace_compatible_sequence) {
   BOOST_CHECK(pset.get<decltype(vval)>("putOrReplaceCompatibleTest") == vval2);
   BOOST_CHECK_EXCEPTION(pset.put_or_replace_compatible("putOrReplaceCompatibleTest", sval),
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
   BOOST_CHECK_EXCEPTION(pset.put_or_replace_compatible("putOrReplaceCompatibleTest", psval),
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
@@ -232,13 +232,13 @@ BOOST_AUTO_TEST_CASE(put_or_replace_compatible_table) {
   BOOST_CHECK(pset.get<decltype(psval)>("putOrReplaceCompatibleTest") == psval2);
   BOOST_CHECK_EXCEPTION(pset.put_or_replace_compatible("putOrReplaceCompatibleTest", sval),
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
   BOOST_CHECK_EXCEPTION(pset.put_or_replace_compatible("putOrReplaceCompatibleTest", vval),
                         fhicl::exception,                               \
-                        [](auto const & e) {                            \
+                        [](fhicl::exception const & e) {                            \
                           return e.categoryCode() ==                    \
                             fhicl::error::cant_insert;                  \
                         });
