@@ -121,23 +121,37 @@ namespace mf {
     MaybeLogger_&  operator= ( MaybeLogger_ && )      = delete;
 
     template< class T >
-    decltype(auto) operator << ( T const & t )
-    {
+    MaybeLogger_ & operator << ( T const & t ) & {
+    //decltype(auto) operator << ( T const & t )
+    //{
       if ( !CONDITIONAL || msgSender_p.get() ) *msgSender_p << t;
-      return std::forward<MaybeLogger_>(*this);
+      return *this;
+      //return std::forward<MaybeLogger_>(*this);
     }
 
-    decltype(auto) operator << ( std::ostream&(*f)(std::ostream&) )
-    {
+    MaybeLogger_ & operator << ( std::ostream&(*f)(std::ostream&) ) & {
+    //decltype(auto) operator << ( std::ostream&(*f)(std::ostream&) )
+    //{
       if ( !CONDITIONAL || msgSender_p.get() ) *msgSender_p << f;
-      return std::forward<MaybeLogger_>(*this);
+      return *this;
+      //return std::forward<MaybeLogger_>(*this);
     }
 
-    decltype(auto) operator << ( std::ios_base&(*f)(std::ios_base&) )
-    {
+    MaybeLogger_ & operator << ( std::ios_base&(*f)(std::ios_base&) ) & {
+    //decltype(auto) operator << ( std::ios_base&(*f)(std::ios_base&) )
+    //{
       if ( !CONDITIONAL || msgSender_p.get() ) *msgSender_p << f;
-      return std::forward<MaybeLogger_>(*this);
+      return *this;
+      //return std::forward<MaybeLogger_>(*this);
     }
+
+    // &&-qualified ostream operators
+
+    template< class T >
+    MaybeLogger_ && operator << ( T const & t ) && { return std::move(*this << t); }
+
+    MaybeLogger_ && operator << ( std::ostream& (*f)(std::ostream&)  ) && { return std::move(*this << f); }
+    MaybeLogger_ && operator << ( std::ios_base&(*f)(std::ios_base&) ) && { return std::move(*this << f); }
 
   };
 
