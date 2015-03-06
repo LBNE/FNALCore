@@ -39,7 +39,7 @@ namespace mf {
 
     // default formatting flags
 
-    const std::bitset<NFLAGS> MsgFormatSettings::default_flags_ { 0b1111'0000'1111010 };
+    const std::bitset<NFLAGS> MsgFormatSettings::default_flags_ ("111100001111010");
 
     // bits are given in reverse order of enum declaration, so that the
     // above corresponds to:
