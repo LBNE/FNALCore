@@ -104,6 +104,8 @@ endif()
 
 # In CMake 2.8.12 and higher, these can be propagated to clients via the
 # target_compile_options command
+# Force cxx11, lets see what fails
+set(CXX11_COMPILER_FLAGS "-std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_COMPILER_FLAGS}")
 
 #-----------------------------------------------------------------------
