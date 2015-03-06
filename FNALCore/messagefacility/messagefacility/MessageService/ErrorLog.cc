@@ -47,6 +47,13 @@
 #include <iostream>
 #include <iomanip>
 
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+
 // Possible Traces:
 // #define ErrorLogCONSTRUCTOR_TRACE
 // #define ErrorLogOUTPUT_TRACE
@@ -230,7 +237,7 @@ ErrorLog & ErrorLog::operator()( mf::ErrorObj & msg )  {
     std::cerr << "\nERROR LOGGED WITHOUT DESTINATION!\n";
     std::cerr << "Attaching destination \"cerr\" to ELadministrator by default\n"
               << std::endl;
-    a->attach( "cerr", std::make_unique<ELostreamOutput>(std::cerr) );
+    a->attach( "cerr", ::make_unique<ELostreamOutput>(std::cerr) );
   }
 
   for ( const auto & d : a->sinks() ) {

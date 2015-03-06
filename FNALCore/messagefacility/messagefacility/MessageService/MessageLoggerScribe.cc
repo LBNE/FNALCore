@@ -19,6 +19,12 @@
 #include <cassert>
 #include <iostream>
 
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 namespace {
 
   const bool throw_on_clean_slate     = true;
@@ -31,7 +37,7 @@ namespace mf {
 
     MessageLoggerScribe::MessageLoggerScribe(std::shared_ptr<ThreadQueue> queue)
       : admin_p   ( ELadministrator::instance() )
-      , early_dest( admin_p->attach( "cerr_early", std::make_unique<ELostreamOutput>( std::cerr, false)) )
+      , early_dest( admin_p->attach( "cerr_early", ::make_unique<ELostreamOutput>( std::cerr, false)) )
       , errorlog_p( new ErrorLog() )
       , job_pset_p( )
       , jobReportOption( )
@@ -552,7 +558,7 @@ namespace mf {
           if ( actual_filename == jobReportOption ) jobReportOption = empty_String;
 
           ELdestControl dest_ctrl = admin_p->attach( outputId,
-                                                     std::make_unique<ELfwkJobReport>( actual_filename ) );
+                                                     ::make_unique<ELfwkJobReport>( actual_filename ) );
 
           // now configure this destination:
           configure_dest(dest_ctrl, psetname, fjr_pset);
@@ -575,7 +581,7 @@ namespace mf {
       // use already-specified configuration if destination exists
       if ( duplicateDest ) return;
 
-      ELdestControl dest_ctrl = admin_p->attach( outputId, std::make_unique<ELfwkJobReport>( actual_filename ) );
+      ELdestControl dest_ctrl = admin_p->attach( outputId, ::make_unique<ELfwkJobReport>( actual_filename ) );
 
       // now configure this destination, in the jobreport default manner:
       configure_default_fwkJobReport (dest_ctrl);

@@ -17,6 +17,12 @@
 #include <iostream>
 #include <sstream>
 
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 namespace mf {
 
   void LogStatistics() {
@@ -102,7 +108,7 @@ namespace mf {
       }
 
     std::string fname;
-    auto policy_ptr = std::make_unique<cet::filepath_maker>();
+    auto policy_ptr = ::make_unique<cet::filepath_maker>();
 
     if (sub_start==0)  // env embedded in the filename
       {
