@@ -1,0 +1,73 @@
+#ifndef CPP0X_RANDOM
+#define CPP0X_RANDOM
+
+// ======================================================================
+//
+// random - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_RANDOM_HDR
+
+#if defined CPP0X_HAS_RANDOM_HDR
+  #include <random>
+
+#else
+  // Engines:
+  #include "cpp0x/detail/linear_congruential_engine"
+  #include "cpp0x/detail/mersenne_twister_engine"
+  #include "cpp0x/detail/subtract_with_carry_engine"
+  // Engine adaptors:
+  #include "cpp0x/detail/linear_congruential_engine"
+  #include "cpp0x/detail/discard_block_engine"
+  #include "cpp0x/detail/independent_bits_engine"
+  #include "cpp0x/detail/shuffle_order_engine"
+  // Predefined engines:
+  #include "cpp0x/detail/predefined_engine_types"
+  // URNG interface to entropy samplers:
+  #include "cpp0x/detail/random_device"
+  // Utilities:
+  #include "cpp0x/detail/seed_seq"
+  #include "cpp0x/detail/generate_canonical"
+  // Uniform distributions:
+  #include "cpp0x/detail/uniform_int_distribution"
+  #include "cpp0x/detail/uniform_real_distribution"
+  // Bernoulli distributions:
+  #include "cpp0x/detail/bernoulli_distribution"
+  #include "cpp0x/detail/binomial_distribution"
+  #include "cpp0x/detail/geometric_distribution"
+  #include "cpp0x/detail/negative_binomial_distribution"
+  // Poisson distributions:
+  #include "cpp0x/detail/poisson_distribution"
+  #include "cpp0x/detail/exponential_distribution"
+  #include "cpp0x/detail/gamma_distribution"
+  #include "cpp0x/detail/weibull_distribution"
+  #include "cpp0x/detail/extreme_value_distribution"
+  // Normal distributions:
+  #include "cpp0x/detail/normal_distribution"
+  #include "cpp0x/detail/lognormal_distribution"
+  #include "cpp0x/detail/chi_squared_distribution"
+  #include "cpp0x/detail/cauchy_distribution"
+  #include "cpp0x/detail/fisher_f_distribution"
+  #include "cpp0x/detail/student_t_distribution"
+  // Sampling distributions:
+  #include "cpp0x/detail/discrete_distribution"
+  #include "cpp0x/detail/piecewise_constant_distribution"
+  #include "cpp0x/detail/piecewise_linear_distribution"
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

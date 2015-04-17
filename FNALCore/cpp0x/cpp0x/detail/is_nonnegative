@@ -1,0 +1,32 @@
+#ifndef _IS_NONNEGATIVE
+#define _IS_NONNEGATIVE
+
+// ======================================================================
+//
+// range_check: ensure arithmetic values are within specified bounds
+//
+// ======================================================================
+
+#include "cpp0x/type_traits"
+
+namespace std {
+namespace _ {
+
+  template< class T >
+  inline
+  typename enable_if< is_signed<T>::value, bool >::type
+    is_nonnegative( T t )  { return T() <= t; }
+
+  template< class T >
+  inline
+  typename enable_if< is_unsigned<T>::value, bool >::type
+    is_nonnegative( T )  { return true; }
+
+}  // std::_
+}  // std::
+
+// ======================================================================
+
+#endif  // _IS_NONNEGATIVE
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

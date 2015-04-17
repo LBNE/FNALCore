@@ -1,0 +1,43 @@
+#ifndef CPP0X_UTILITY
+#define CPP0X_UTILITY
+
+// ======================================================================
+//
+// utility - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+#include <utility>
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_UTILITY_DECLVAL
+
+#if defined CPP0X_HAS_UTILITY_DECLVAL
+
+#elif BOOST_VERSION < 104500
+  #include "cpp0x/detail/declval"
+  namespace std {
+    using ::boost::declval;
+  }
+
+#elif BOOST_VERSION >= 104500
+  #include "boost/utility/declval.hpp"
+  namespace std {
+    using ::boost::declval;
+  }
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

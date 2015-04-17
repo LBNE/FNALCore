@@ -1,0 +1,58 @@
+#ifndef CPP0X_ITERATOR
+#define CPP0X_ITERATOR
+
+// ======================================================================
+//
+// iterator - accommodations for as-yet unsupported C++0X features
+//
+// ----------------------------------------------------------------------
+//
+// This source file is intended for only short-term use.  Once compilers
+// support the necessary C++0X features, this file should be no longer
+// used and should go away.
+//
+// ======================================================================
+
+#include "cpp0x/detail/config"
+
+#include <iterator>
+
+// ----------------------------------------------------------------------
+// CPP0X_HAS_ITERATOR_RANGE
+
+#if defined CPP0X_HAS_ITERATOR_RANGE
+
+#else
+  namespace std {
+    template< class Cont >
+    typename Cont::iterator
+      begin( Cont & c )  { return c.begin(); }
+
+    template< class Cont >
+    typename Cont::iterator
+      end( Cont & c )  { return c.end(); }
+
+    template< class Cont >
+    typename Cont::const_iterator
+      begin( Cont const & c )  { return c.begin(); }
+
+    template< class Cont >
+    typename Cont::const_iterator
+      end( Cont const & c )  { return c.end(); }
+
+    template< class Elem, size_t N >
+    Elem *
+      begin( Elem (& a)[N] )  { return a + 0; }
+
+    template< class Elem, size_t N >
+    Elem *
+      end( Elem (& a)[N] )  { return a + N; }
+  }
+
+#endif
+
+// ======================================================================
+
+#endif
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:

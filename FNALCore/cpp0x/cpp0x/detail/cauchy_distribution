@@ -1,0 +1,296 @@
+#ifndef DETAIL_CAUCHY_DISTRIBUTION
+#define DETAIL_CAUCHY_DISTRIBUTION
+
+// ======================================================================
+//
+// cauchy_distribution: per C++11 26.5.8.5.4 [rand.dist.norm.cauchy]
+//
+// Produce random numbers x, 0 < x
+//
+// ======================================================================
+
+#include "cpp0x/cmath"
+#include "cpp0x/detail/generate_canonical"
+#include "cpp0x/detail/stream_state_guard"
+#include "cpp0x/type_traits"
+#include <iosfwd>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+
+namespace std {
+
+  template< class Real = double >
+    class cauchy_distribution;
+
+  template< class Real, class charT, class traits >
+  basic_ostream<charT,traits> &
+    operator << ( basic_ostream<charT,traits>     &
+                , cauchy_distribution<Real> const &
+                );
+
+  template< class Real, class charT, class traits >
+  basic_istream<charT,traits> &
+    operator >> ( basic_istream<charT,traits> &
+                , cauchy_distribution<Real>   &
+                );
+
+}
+
+// ======================================================================
+
+template< class Real >
+  class std::cauchy_distribution
+{
+private:
+
+  // validate parameters:
+  STATIC_ASSERT( is_floating_point<Real>::value
+               , "std::cauchy_distribution<> requires a floating-point type"
+               );
+
+  class param_t;
+
+  param_t  parm;
+
+public:
+
+  // types:
+  typedef  Real     result_type;
+  typedef  param_t  param_type;
+
+  // constructors and reset functions:
+            cauchy_distribution( );
+  explicit  cauchy_distribution( Real );
+            cauchy_distribution( Real, Real );
+  explicit  cauchy_distribution( param_type const & );
+  void      reset( );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // generating functions:
+  template< class URNG >
+    result_type  operator () ( URNG & );
+  template< class URNG >
+    result_type  operator () ( URNG &, param_type const & );
+
+  // property functions:
+  Real         a    ( ) const  { return parm.a(); }
+  Real         b    ( ) const  { return parm.b(); }
+  param_type   param( ) const  { return parm; }
+  void         param( param_type const & p )  { parm = p; }
+  result_type  min  ( ) const  { return numeric_limits<Real>::min(); }
+  result_type  max  ( ) const  { return numeric_limits<Real>::infinity(); }
+
+  // equality comparisons:
+  bool  operator == ( cauchy_distribution const & ) const;
+  bool  operator != ( cauchy_distribution const & ) const;
+
+};  // cauchy_distribution<>
+
+// ======================================================================
+
+template< class Real >
+  class std::cauchy_distribution<Real>::param_t
+{
+  friend  class cauchy_distribution<Real>;
+
+private:
+  Real  a_;
+  Real  b_;
+
+  // helper functions:
+  template< class URNG >
+    Real  generate( URNG & ) const;
+  static range_error bad_b;
+
+public:
+
+  // types:
+  typedef  Real                       result_type;
+  typedef  cauchy_distribution<Real>  distribution_type;
+
+  // constructors:
+  explicit  param_t( Real = Real(), Real = Real(1.0) );
+
+  // use compiler-generated copy c'tor, copy assignment, and d'tor
+
+  // property functions:
+  Real  a( ) const  { return a_; }
+  Real  b( ) const  { return b_; }
+
+  // equality comparisons:
+  bool  operator == ( param_t const & ) const;
+  bool  operator != ( param_t const & ) const;
+
+};  // cauchy_distribution<>::param_t
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors:
+
+template< class Real >
+  std::cauchy_distribution<Real>::param_t::
+  param_t( Real a, Real b )
+: a_( a )
+, b_( Real() < b ? b : throw bad_b )
+{ }
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Real >
+bool
+  std::cauchy_distribution<Real>::param_t::
+  operator == ( param_t const & other ) const
+{
+  return a_ == other.a_
+      && b_ == other.b_;
+}
+
+template< class Real >
+bool
+  std::cauchy_distribution<Real>::param_t::
+  operator != ( param_t const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// helper functions:
+
+template< class Real >
+template< class URNG >
+Real
+  std::cauchy_distribution<Real>::param_t::
+  generate( URNG & u ) const
+{
+  constexpr size_t       nbits = numeric_limits<double>::digits;
+  constexpr result_type  pi    = 3.1415926535897932384626433832795L;
+
+  return a_
+       + b_ * tan(pi * generate_canonical<result_type,nbits>(u));
+}
+
+template< class Real >
+std::range_error
+  std::cauchy_distribution<Real>::param_t::
+  bad_b("std::cauchy_distribution<> requires 0 < b");
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// constructors and reset functions:
+
+template< class Real >
+  std::cauchy_distribution<Real>::
+  cauchy_distribution( )
+: parm( )
+{ }
+
+template< class Real >
+  std::cauchy_distribution<Real>::
+  cauchy_distribution( Real a )
+: parm( a )
+{ }
+
+template< class Real >
+  std::cauchy_distribution<Real>::
+  cauchy_distribution( Real a, Real b )
+: parm( a, b )
+{ }
+
+template< class Real >
+  std::cauchy_distribution<Real>::
+  cauchy_distribution( param_type const & p )
+: parm( p )
+{ }
+
+template< class Real >
+void
+  std::cauchy_distribution<Real>::
+  reset( )
+{
+}
+
+// ----------------------------------------------------------------------
+// generating functions:
+
+template< class Real >
+template< class URNG >
+inline  Real
+  std::cauchy_distribution<Real>::
+  operator () ( URNG & u )
+{
+  return parm.generate(u);
+}
+
+template< class Real >
+template< class URNG >
+inline  Real
+  std::cauchy_distribution<Real>::
+  operator () ( URNG & u, param_type const & parm )
+{
+  return parm.generate(u);
+}
+
+// ----------------------------------------------------------------------
+// equality comparisons:
+
+template< class Real >
+inline  bool
+  std::cauchy_distribution<Real>::
+  operator == ( cauchy_distribution const & other ) const
+{
+  return parm == other.parm;
+}
+
+template< class Real >
+bool
+  std::cauchy_distribution<Real>::
+  operator != ( cauchy_distribution const & other ) const
+{
+  return ! (*this == other);
+}
+
+// ----------------------------------------------------------------------
+// i/o functions:
+
+template< class Real, class charT, class traits >
+std::basic_ostream<charT,traits> &
+  std::operator << ( basic_ostream<charT,traits>     & os
+                   , cauchy_distribution<Real> const & d
+                   )
+{
+  _::stream_state_guard<charT,traits> g(os);
+  constexpr charT  sp = os.widen(' ');
+
+  return os << d.a() << sp << d.b();
+}
+
+template< class Real, class charT, class traits >
+std::basic_istream<charT,traits> &
+  std::operator >> ( basic_istream<charT,traits> & is
+                   , cauchy_distribution<Real>   & d
+                   )
+{
+  typedef  cauchy_distribution<Real>     dist_t;
+  typedef  typename dist_t::result_type  result_t;
+  typedef  typename dist_t::param_type   param_t;
+
+  _::stream_state_guard<charT,traits> g(is);
+
+  result_t  a, b;
+  is >> a >> b;
+  if( ! is.fail() )
+    d.param( param_t(a, b) );
+
+  return is;
+}
+
+// ======================================================================
+
+#endif  // DETAIL_CAUCHY_DISTRIBUTION
+
+// vi: set filetype=cpp:expandtab:shiftwidth=2:
