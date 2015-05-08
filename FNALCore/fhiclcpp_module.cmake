@@ -22,6 +22,10 @@ set(PUBLIC_HDRS
   ${fhiclcpp_INCLUDE_DIR}/type_traits.h
 )
 
+set(DETAIL_HDRS
+  ${fhiclcpp_INCLUDE_DIR}/detail/encode_extended_value.h
+)
+
 set(SOURCES
   ${fhiclcpp_INCLUDE_DIR}/DatabaseSupport.cc
   ${fhiclcpp_INCLUDE_DIR}/ParameterSet.cc
@@ -35,7 +39,11 @@ set(SOURCES
   ${fhiclcpp_INCLUDE_DIR}/parse.cc
 )
 
-add_library(obj-fhiclcpp OBJECT ${PUBLIC_HDRS} ${SOURCES})
+set(DETAIL_SRCS
+  ${fhiclcpp_INCLUDE_DIR}/detail/encode_extended_value.cc
+)
+
+add_library(obj-fhiclcpp OBJECT ${PUBLIC_HDRS} ${SOURCES} ${DETAIL_HDRS} ${DETAIL_SRCS} )
 
 add_executable(fhicl-expand ${fhiclcpp_INCLUDE_DIR}/fhicl-expand.cc)
 target_link_libraries(fhicl-expand
@@ -62,4 +70,8 @@ install(FILES ${PUBLIC_HDRS}
   COMPONENT Development
   )
 
+install(FILES ${DETAIL_HDRS}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FNALCore/fhiclcpp/detail
+  COMPONENT Development
+  )
 # ======================================================================
