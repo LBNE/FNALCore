@@ -57,6 +57,7 @@ set(cetlib_PUBLIC_HDRS
   ${cetlib_INCLUDE_DIR}/trim.h
   ${cetlib_INCLUDE_DIR}/value_ptr.h
   ${cetlib_INCLUDE_DIR}/zero_init.h
+  ${cetlib_INCLUDE_DIR}/MD5Digest.h
   )
 
 set(cetlib_DETAIL_HDRS
@@ -98,6 +99,7 @@ set(cetlib_SRCS
   ${cetlib_INCLUDE_DIR}/search_path.cc
   ${cetlib_INCLUDE_DIR}/simple_stats.cc
   ${cetlib_INCLUDE_DIR}/split_path.cc
+  ${cetlib_INCLUDE_DIR}/MD5Digest.cc
   )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
