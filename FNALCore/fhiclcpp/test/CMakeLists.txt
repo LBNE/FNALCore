@@ -37,9 +37,16 @@ cet_test(issue_0923_t.sh PREBUILT
 cet_test(parse_document_test USE_BOOST_UNIT)
 cet_test(parse_value_string_test)
 cet_test(to_indented_string_test USE_BOOST_UNIT)
+cet_test(to_indented_string_annotated_test
+  DATAFILES
+  issue-7788/to_indented_string_annotated_test.fcl
+  issue-7788/to_indented_string_annotated_prolog.fcl
+  REF "${CMAKE_CURRENT_SOURCE_DIR}/issue-7788/to_indented_string_annotated_test-ref.txt"
+  )
 cet_test(to_string_test
   DATAFILES Sample.cfg
 )
+cet_test(to_tupleTypes_test DATAFILES to_tupleTypes_test.fcl )
 cet_test(values_test USE_BOOST_UNIT)
 
 cet_test(test_suite USE_BOOST_UNIT NO_AUTO)
@@ -86,7 +93,7 @@ cet_test(seq_of_seq_t)
 
 cet_test(traits_t)
 
-cet_test(ParameterSetRegistry_t USE_BOOST_UNIT ${SQLITE3})
+cet_test(ParameterSetRegistry_t USE_BOOST_UNIT)
 
 cet_test(DatabaseSupport_t USE_BOOST_UNIT
          DATAFILES
